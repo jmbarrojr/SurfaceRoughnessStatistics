@@ -296,8 +296,8 @@ Results = struct2cell(SurfStruct);
 Fields=fieldnames(SurfStruct);
 
 SurfName = SurfAnswers2filename(SurfAnswers);
-ScannerName = ScannerAnswers.Q1{1};
-ScannerInfo = ScannerAnswers.Q1{2};
+ScannerName = {'Scanner name and model';'Scanner uncertainty (microns)'};
+ScannerInfo = [ScannerAnswers.Q1; ScannerAnswers.Q1];
 
 varNames = {'Streamwise length of scan (mm)';
     'Spanwise length of scan (mm)';
