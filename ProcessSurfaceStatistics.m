@@ -1,15 +1,88 @@
+%This program was written by Julio Barros (OIST) and Karen Flack (USNA)
+%Last updated 8 APR 2020
 clc
 clear
 
-filename = 'Processed_GaussianPSD_L=11xkrms_krms=100um_Sk=1_CURVTILT.mat';
+%Choose file to analyze
+disp('Choose a Matlab data file with x,y,z coordinates.')
+[file,path] = uigetfile('*.mat');
+filename=file;
+
+%Or  paste in the file
+%filename = ['Filename.mat'];
+
+%Get information to name the Excel output file
+disp('--------------------------------------------------------------------------')
+disp('Please enter the following information for a consistent naming convention.')
+disp('Your response should be the word in "quotes".')
+disp(' ')
+%Surface information
+prompt = 'Is the roughness "homogeneous" or "heterogeneous"? ';
+SurfTypeOne = input(prompt,'s');
+disp(' ')
+prompt = 'Is the roughness "regular" or "irregular"? ';
+SurfTypeTwo = input(prompt,'s');
+disp(' ')
+prompt = 'Are results for a "TBL", "pipe" or "channel"? ';
+SurfTypeThree = input(prompt,'s');
+disp(' ')
+prompt = 'Are results from "experiments" or "simulations"? ';
+SurfTypeFour = input(prompt,'s');
+disp(' ')
+prompt = 'What is the last name of the lead author of the study? ';
+SurfTypeFive = input(prompt,'s');
+disp(' ')
+prompt = 'What year were the results published? ';
+SurfTypeSix = input(prompt,'s');
+disp(' ')
+prompt = 'What is the identifying name of this surface, i.e. "Sandpaper_2"? ';
+SurfTypeSeven = input(prompt,'s');
+disp('--------------------------------------------------------------------------')
+
+SurfName=append(SurfTypeOne,"_",SurfTypeTwo,"_",SurfTypeThree,"_",...
+    SurfTypeFour,"_",SurfTypeFive,"_",SurfTypeSix,"_",SurfTypeSeven,".xls");
+
+%Scanner information for Excel file
+disp('Please enter the following information about the profiler/scanner. ')
+disp(' ')
+prompt = 'What is the name and model of the profiler/scanner? ';
+ScannerName = input(prompt,'s');
+disp(' ')
+prompt = 'What is the uncertainty in the measurement of surface heights in microns? ';
+Uncertainty = input(prompt,'s');
+Scanner={'Scanner name and model';'Scanner uncertainty (microns)'};
+ScannerInfo={ScannerName;Uncertainty};
+
+% Run function to calculate statistics
 Surface = getSurfProperties(filename);
 
-filename = 'Processed_Krms350skew+1tile1tiltcurve.mat';
-Surface2 = getSurfProperties(filename);
+% Put information in an excel file
+Results = struct2cell(Surface);
+Fields=fieldnames(Surface);
+Names = {'Streamwise length of scan (mm)';
+    'Spanwise length of scan (mm)';
+    'Minimum roughness height (mm)';
+    'Minimum roughness height (mm)';
+    'Peak-to-trough roughness height (mm)';
+    'Average 5 peak-to-trough roughness height (mm)';
+    'Average roughness height (mm)';
+    'Average of absolute value of the height fluctuations (mm)';
+    'Root-mean-square of the total height (mm)';
+    'Root-mean-square of the height fluctuations (mm)';
+    'Skewness of the height fluctuations';
+    'Flatness of the height fluctuations';
+    'Effective Slope in the steamwise direction';
+    'Correlation length in the steamwise direction';
+    'Effective Slope in the spanwise direction';
+    'Correlation length in the spanwise direction';};
 
-filename = ['Generated_Surface_gaussian_p1=3.85_p2=0.35_rms=350um_'...
-        'Sk=0.97498_ES=0.40465_279.4mm x 190.5mm_100umRes_26-Feb-2018.mat'];
-Surface3 = getSurfProperties(filename);
+%Write data to Excel spreadsheet
+xlswrite(SurfName,Scanner,'A1:A2');
+xlswrite(SurfName,ScannerInfo,'B1:B2');
+xlswrite(SurfName,Names,'D1:D16');
+xlswrite(SurfName,Fields(7:22),'E1:E16');
+xlswrite(SurfName,Results(7:22),'F1:F16');
+
 
 %% NESTED FUNCTIONS
 function Surface = getSurfProperties(filename)
