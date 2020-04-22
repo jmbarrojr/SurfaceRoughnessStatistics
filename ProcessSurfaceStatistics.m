@@ -1,5 +1,5 @@
 %This program was written by Julio Barros (OIST) and Karen Flack (USNA)
-%Last updated 8 APR 2020
+%Last updated 9 APR 2020
 clc
 clear
 
@@ -9,7 +9,7 @@ disp('Choose a Matlab data file with x,y,z coordinates.')
 filename=file;
 
 %Or  paste in the file
-%filename = ['Filename.mat'];
+%filename = ['Processed_Surface02_8_12_25grit_CURVTILT.mat'];
 
 %Get information to name the Excel output file
 disp('--------------------------------------------------------------------------')
@@ -17,30 +17,33 @@ disp('Please enter the following information for a consistent naming convention.
 disp('Your response should be the word in "quotes".')
 disp(' ')
 %Surface information
-prompt = 'Is the roughness "homogeneous" or "heterogeneous"? ';
+prompt = 'Is the roughness "Homogeneous" or "Heterogeneous"? ';
 SurfTypeOne = input(prompt,'s');
 disp(' ')
-prompt = 'Is the roughness "regular" or "irregular"? ';
+prompt = 'Is the roughness "Regular" or "Irregular"? ';
 SurfTypeTwo = input(prompt,'s');
 disp(' ')
-prompt = 'Are results for a "TBL", "pipe" or "channel"? ';
+prompt = 'Are results for a "TBL", "Pipe" or "Channel"? ';
 SurfTypeThree = input(prompt,'s');
 disp(' ')
-prompt = 'Are results from "experiments" or "simulations"? ';
+prompt = 'Are results from "Experiments" or "Simulations"? ';
 SurfTypeFour = input(prompt,'s');
 disp(' ')
-prompt = 'What is the last name of the lead author of the study? ';
+prompt = 'What is a general descriptor of this surface, i.e. "Sandgrain"? ';
 SurfTypeFive = input(prompt,'s');
 disp(' ')
-prompt = 'What year were the results published? ';
+prompt = 'What is the last name of the lead author of the study? ';
 SurfTypeSix = input(prompt,'s');
 disp(' ')
-prompt = 'What is the identifying name of this surface, i.e. "Sandpaper_2"? ';
+prompt = 'What year were the results published? ';
 SurfTypeSeven = input(prompt,'s');
+disp(' ')
+prompt = 'What is the identifying name of this surface, i.e. "220Grit"? ';
+SurfTypeEight = input(prompt,'s');
 disp('--------------------------------------------------------------------------')
 
-SurfName=append(SurfTypeOne,"_",SurfTypeTwo,"_",SurfTypeThree,"_",...
-    SurfTypeFour,"_",SurfTypeFive,"_",SurfTypeSix,"_",SurfTypeSeven,".xls");
+SurfName=append("Surface_Statistics_",SurfTypeOne,"_",SurfTypeTwo,"_",SurfTypeThree,"_",...
+    SurfTypeFour,"_",SurfTypeFive,"_",SurfTypeSix,"_",SurfTypeSeven,"_",SurfTypeEight,".xls");
 
 %Scanner information for Excel file
 disp('Please enter the following information about the profiler/scanner. ')
