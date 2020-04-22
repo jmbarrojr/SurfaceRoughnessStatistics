@@ -177,20 +177,36 @@ SurfStruct.Ly = Ly;
 end
 
 function SurfStruct = roughnessStats(SurfStruct)
-zname = SurfStruct.varNames{end}; % A bit of a strech assuming the
+zname = SurfStruct.varNames{end}; 
 % height information is the last variable.
 z = SurfStruct.obj.(zname);
+% Minimum roughness height
 kmin = min(z(:));
+SurfStruct.kmin = kmin;
+% Maximum roughness height
 kmax = max(z(:));
+SurfStruct.kmax = kmax;
+% Peak-to-trough roughness height
 SurfStruct.kp = kmax - kmin;
-%kp5 = 
-SurfStruct.km = mean(z(:));
+% Peak-to-trough roughness height average 5
+MaxZ = sortrows(z(:),'descend');
+MinZ = sortrows(z(:),'ascend');
+SurfStruct.kp5 = mean(MaxZ(1:5)) - mean(MinZ(1:5));
+% Average roughness height over entire surface
+SurfStruct.kbar = mean(z(:));
+% Root-mean-square of the height
 SurfStruct.ka = mean(abs(z(:)));
+% Remove mean height
 SurfStruct.krms = rms(z(:));
-SurfStruct.kstd = std(z(:));
-SurfStruct.kSk = skewness(z(:));
-SurfStruct.kKu = kurtosis(z(:));
-
+% Average roughness height
+z = z - mean(z(:));
+% Root-mean-square of the height with mean height removed
+SurfStruct.krmsp = rms(z(:));
+% Skewness of the roughness height fluctuation
+SurfStruct.Sk = skewness(z(:));
+% Flatness of the roughness height fluctuation
+SurfStruct.Fl = kurtosis(z(:));
+% Effective slope and correlation length
 xname = SurfStruct.varNames{1};
 x = SurfStruct.obj.(xname);
 SurfStruct.Esx = EffectiveSlope(x,z,SurfStruct.Xdir);
