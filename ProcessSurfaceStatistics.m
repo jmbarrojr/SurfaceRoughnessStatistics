@@ -302,7 +302,7 @@ ScannerInfo = ScannerAnswers.Q1{2};
 varNames = {'Streamwise length of scan (mm)';
     'Spanwise length of scan (mm)';
     'Minimum roughness height (mm)';
-    'Minimum roughness height (mm)';
+    'Maximum roughness height (mm)';
     'Peak-to-trough roughness height (mm)';
     'Average 5 peak-to-trough roughness height (mm)';
     'Average roughness height (mm)';
