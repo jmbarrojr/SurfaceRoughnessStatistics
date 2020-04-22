@@ -1,15 +1,20 @@
-%This program was written by Julio Barros (OIST) and Karen Flack (USNA)
-%Last updated 9 APR 2020
+% This script processes surface roughness statistics to support the
+% roughness database hosted by the University of Southampton 
+%
+% Authors: Julio Barros (OIST) and Karen Flack (USNA)
+%
+% Last updated 9 APR 2020
 clc
 clear
 
-%Choose file to analyze
-disp('Choose a Matlab data file with x,y,z coordinates.')
-[file,path] = uigetfile('*.mat');
-filename=file;
-
-%Or  paste in the file
-%filename = ['Processed_Surface02_8_12_25grit_CURVTILT.mat'];
+% Choose file to analyze
+[filename,path] = uigetfile({'*.mat';'*.txt';'*.csv'},...
+                      'Choose a Matlab data file with x,y,z coordinates.');
+if isempty(filename) || filename == 0
+    error('No file was selected')
+end
+% Or  paste in the file
+% filename = ['Processed_Surface02_8_12_25grit_CURVTILT.mat'];
 
 %Get information to name the Excel output file
 disp('--------------------------------------------------------------------------')
@@ -87,7 +92,8 @@ xlswrite(SurfName,Fields(7:22),'E1:E16');
 xlswrite(SurfName,Results(7:22),'F1:F16');
 
 
-%% NESTED FUNCTIONS
+%% SUPPORTING FUNCTIONS
+% MAIN FUNCTION -----------------------------------------------------------
 function Surface = getSurfProperties(filename)
 Surface = loadSurface(filename);
 Surface = determineSurfaceType(Surface);
@@ -96,6 +102,7 @@ Surface = roughPhysicalProp(Surface);
 Surface = roughnessStats(Surface);
 end
 
+% LOADING MATLAB FUNCTIONS ------------------------------------------------
 function SurfStruct = loadSurface(filename)
 ext = filename(end-3:end);
 switch ext
@@ -122,6 +129,7 @@ end
 SurfStruct.varNames = varNames;
 end
 
+% TYPE OF SCAN FUNCTION ---------------------------------------------------
 function SurfStruct = determineSurfaceType(SurfStruct)
 L = length(SurfStruct.varNames);
 if L == 2
@@ -134,6 +142,7 @@ end
 SurfStruct.type = type;
 end
 
+% SURFACE RELATED FUNCTIONS -----------------------------------------------
 function SurfStruct = determineXandYdir(SurfStruct)
 zname = SurfStruct.varNames{end}; % A bit of a strech assuming the
 % height information is the last variable.
@@ -162,7 +171,7 @@ end
 SurfStruct.Xdir = Xdir;
 SurfStruct.Ydir = Ydir;
 end
-
+% -------------------------------------------------------------------------
 function SurfStruct = roughPhysicalProp(SurfStruct)
 xname = SurfStruct.varNames{1};
 x = SurfStruct.obj.(xname);
@@ -179,36 +188,50 @@ SurfStruct.Lx = Lx;
 SurfStruct.Ly = Ly;
 end
 
+% SURFACE ROUGHNESS STATISTICS --------------------------------------------
 function SurfStruct = roughnessStats(SurfStruct)
 zname = SurfStruct.varNames{end}; 
-% height information is the last variable.
+
+% Height information is the last variable.
 z = SurfStruct.obj.(zname);
+
 % Minimum roughness height
 kmin = min(z(:));
 SurfStruct.kmin = kmin;
+
 % Maximum roughness height
 kmax = max(z(:));
 SurfStruct.kmax = kmax;
+
 % Peak-to-trough roughness height
 SurfStruct.kp = kmax - kmin;
+
 % Peak-to-trough roughness height average 5
 MaxZ = sortrows(z(:),'descend');
 MinZ = sortrows(z(:),'ascend');
 SurfStruct.kp5 = mean(MaxZ(1:5)) - mean(MinZ(1:5));
+
 % Average roughness height over entire surface
 SurfStruct.kbar = mean(z(:));
+
 % Root-mean-square of the height
 SurfStruct.ka = mean(abs(z(:)));
+
 % Remove mean height
 SurfStruct.krms = rms(z(:));
+
 % Average roughness height
 z = z - mean(z(:));
+
 % Root-mean-square of the height with mean height removed
 SurfStruct.krmsp = rms(z(:));
+
 % Skewness of the roughness height fluctuation
 SurfStruct.Sk = skewness(z(:));
+
 % Flatness of the roughness height fluctuation
 SurfStruct.Fl = kurtosis(z(:));
+
 % Effective slope and correlation length
 xname = SurfStruct.varNames{1};
 x = SurfStruct.obj.(xname);
@@ -223,7 +246,7 @@ switch SurfStruct.type
 end
 
 end
-
+% -------------------------------------------------------------------------
 function Es = EffectiveSlope(X,Z,dir)
 if dir == 1
     dx = X(2,1) - X(1,1);
@@ -236,7 +259,7 @@ L = max(X(:)) - min(X(:));
 [dzdx,~] = gradient(Z,dx);
 Es = 1/L .* mean( trapz(abs(dzdx),dir).*dx, mean_dir); % Efective Slope;
 end
-
+% -------------------------------------------------------------------------
 function Rlx = CorrelationLenght(X,Z,dir)
 if dir == 1
     dx = X(2,1) - X(1,1);
@@ -250,7 +273,7 @@ lags = lags.*dx;
 ind = findSlopeCorr(Zcorr);
 Rlx = interp1(Zcorr(s:s+ind),lags(s:s+ind),1./exp(1),'linear');
 end
-
+% -------------------------------------------------------------------------
 function [lags,C] = MeanAutoCorr_FFT(A,dir)
 S = size(A);                 
 s = S(dir);                      % Get the size of A in the desired direction
@@ -272,7 +295,7 @@ end
 C = C ./ max(C(:)); % Normalize the correlation
 lags = [linspace(-(s-1),1,s-1) 0 linspace(1,s-1,s-1)];
 end
-
+% -------------------------------------------------------------------------
 function ind = findSlopeCorr(C)
 l = length(C);
 C = C((l+1)/2:end); % Get only half of C
