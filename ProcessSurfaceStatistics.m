@@ -1,11 +1,33 @@
 % This script processes surface roughness statistics to support the
-% roughness database hosted by the University of Southampton 
+% roughness database hosted by the University of Southampton.
+%
+%  The development idea of this script is to require minimum users
+%  interface when running the code. In other word, there is no need for
+%  code manipulation or changes to fully export the roughness statistics.
+%
+% Two type of surfaces are supported: 1D line profiles, or 3D surface
+% scans.
+%
+% However, we ask the user to comply with the standard set of the input
+% file containing the roughness height information. The input formart
+% supported are MATLAB (*.mat), Excel (*.xls) and ASCII (*.csv or
+% tab-delimeted *.txt, or *.dat).
+%
+% For MATLAB files, put the roughness infomation in data into variables
+% X,Y,Z and use the save(...) function to save the roughness information.
+%
+% For ASCII files, the X,Y,Z information should be format in each column.
+%
+% The supporting functions are nested in the bottom of this script.
+% Changing them may like break the code. If a bug was detected, either
+% open an issue github at https://github.com/jmbarrojr/SurfaceRoughnessStatistics/issues
+% send an email to julio.barros@gmail.com using "[BUG]" prefix in the
+% email's subject.
+%
 %
 % Authors: Julio Barros (OIST) and Karen Flack (USNA)
-%
-% Last updated 9 APR 2020
-clc
-clear
+
+clc, clear
 
 %% Choose file to analyze
 [filename,pathname] = uigetfile({'*.mat';'*.txt';'*.csv'},...
