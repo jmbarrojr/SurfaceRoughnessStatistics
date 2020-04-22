@@ -7,90 +7,24 @@
 clc
 clear
 
-% Choose file to analyze
-[filename,path] = uigetfile({'*.mat';'*.txt';'*.csv'},...
+%% Choose file to analyze
+[filename,pathname] = uigetfile({'*.mat';'*.txt';'*.csv'},...
                       'Choose a Matlab data file with x,y,z coordinates.');
-if isempty(filename) || filename == 0
+if isempty(filename) == 1 || ~ischar(filename)
     error('No file was selected')
 end
 % Or  paste in the file
 % filename = ['Processed_Surface02_8_12_25grit_CURVTILT.mat'];
 
-%Get information to name the Excel output file
-disp('--------------------------------------------------------------------------')
-disp('Please enter the following information for a consistent naming convention.')
-disp('Your response should be the word in "quotes".')
-disp(' ')
-%Surface information
-prompt = 'Is the roughness "Homogeneous" or "Heterogeneous"? ';
-SurfTypeOne = input(prompt,'s');
-disp(' ')
-prompt = 'Is the roughness "Regular" or "Irregular"? ';
-SurfTypeTwo = input(prompt,'s');
-disp(' ')
-prompt = 'Are results for a "TBL", "Pipe" or "Channel"? ';
-SurfTypeThree = input(prompt,'s');
-disp(' ')
-prompt = 'Are results from "Experiments" or "Simulations"? ';
-SurfTypeFour = input(prompt,'s');
-disp(' ')
-prompt = 'What is a general descriptor of this surface, i.e. "Sandgrain"? ';
-SurfTypeFive = input(prompt,'s');
-disp(' ')
-prompt = 'What is the last name of the lead author of the study? ';
-SurfTypeSix = input(prompt,'s');
-disp(' ')
-prompt = 'What year were the results published? ';
-SurfTypeSeven = input(prompt,'s');
-disp(' ')
-prompt = 'What is the identifying name of this surface, i.e. "220Grit"? ';
-SurfTypeEight = input(prompt,'s');
-disp('--------------------------------------------------------------------------')
+%% Roughness and Scanner Questionare
+SurfAnswers = RoghnessQuestionare();
+ScannerAnswers = ScannerQuestionare();
 
-SurfName=append("Surface_Statistics_",SurfTypeOne,"_",SurfTypeTwo,"_",SurfTypeThree,"_",...
-    SurfTypeFour,"_",SurfTypeFive,"_",SurfTypeSix,"_",SurfTypeSeven,"_",SurfTypeEight,".xls");
+%% Run function to calculate statistics
+Surface = getSurfProperties(fullfile(pathname,filename));
 
-%Scanner information for Excel file
-disp('Please enter the following information about the profiler/scanner. ')
-disp(' ')
-prompt = 'What is the name and model of the profiler/scanner? ';
-ScannerName = input(prompt,'s');
-disp(' ')
-prompt = 'What is the uncertainty in the measurement of surface heights in microns? ';
-Uncertainty = input(prompt,'s');
-Scanner={'Scanner name and model';'Scanner uncertainty (microns)'};
-ScannerInfo={ScannerName;Uncertainty};
-
-% Run function to calculate statistics
-Surface = getSurfProperties(filename);
-
-% Put information in an excel file
-Results = struct2cell(Surface);
-Fields=fieldnames(Surface);
-Names = {'Streamwise length of scan (mm)';
-    'Spanwise length of scan (mm)';
-    'Minimum roughness height (mm)';
-    'Minimum roughness height (mm)';
-    'Peak-to-trough roughness height (mm)';
-    'Average 5 peak-to-trough roughness height (mm)';
-    'Average roughness height (mm)';
-    'Average of absolute value of the height fluctuations (mm)';
-    'Root-mean-square of the total height (mm)';
-    'Root-mean-square of the height fluctuations (mm)';
-    'Skewness of the height fluctuations';
-    'Flatness of the height fluctuations';
-    'Effective Slope in the steamwise direction';
-    'Correlation length in the steamwise direction';
-    'Effective Slope in the spanwise direction';
-    'Correlation length in the spanwise direction';};
-
-%Write data to Excel spreadsheet
-xlswrite(SurfName,Scanner,'A1:A2');
-xlswrite(SurfName,ScannerInfo,'B1:B2');
-xlswrite(SurfName,Names,'D1:D16');
-xlswrite(SurfName,Fields(7:22),'E1:E16');
-xlswrite(SurfName,Results(7:22),'F1:F16');
-
+%% Export Surface Statistics
+exportSurfaceStatistics(Surface,SurfAnswers,ScannerAnswers)
 
 %% SUPPORTING FUNCTIONS
 % MAIN FUNCTION -----------------------------------------------------------
@@ -122,7 +56,7 @@ for n=1:N
     cls = SurfStruct.varProps(n).class;
     name = SurfStruct.varProps(n).name;
     if strcmp(cls,'double')
-        varNames{c} = name;
+        varNames{c} = name; %#ok<AGROW>
         c = c + 1;
     end
 end
@@ -300,4 +234,114 @@ function ind = findSlopeCorr(C)
 l = length(C);
 C = C((l+1)/2:end); % Get only half of C
 ind = find(diff(C) > 0,1);
+end
+
+% QUESTIONARE FUNCTIONS ---------------------------------------------------
+function SurfAnswers = RoghnessQuestionare()
+% Get information to name the Excel output file
+% Surface information
+prompt = 'What kind of suface is it? ';
+q1 = 'Homogeneous'; q2 = 'Heterogeneous';
+SurfAnswers.Q1 = questdlg(prompt,'Roughness Information',...
+                     q1,q2,q1);
+checkAnswer(SurfAnswers.Q1);
+
+prompt = 'Is the roughness ...';
+q1 = 'Regular'; q2 = 'Irregular';
+SurfAnswers.Q2 = questdlg(prompt,'Roughness Information',...
+                     q1, q2, q1);
+checkAnswer(SurfAnswers.Q2);
+
+prompt = 'Are results for a ...';
+q1 = 'TBL'; q2 = 'Pipe'; q3 = 'Channel';
+SurfAnswers.Q3 = questdlg(prompt,'Roughness Information',...
+                     q1, q2, q3, q1);
+checkAnswer(SurfAnswers.Q3);
+
+prompt = 'Are results from ...';
+q1 = 'Experiments'; q2 = 'Simulations';
+SurfAnswers.Q4 = questdlg(prompt,'Roughness Information',...
+                     q1,q2,q1);
+checkAnswer(SurfAnswers.Q4);
+
+prompt = 'What is the general descriptor of this surface, .i.e. "Sandgrain"?';
+SurfAnswers.Q5 = inputdlg(prompt,'Roughness Information',[1 50]);
+checkAnswer(SurfAnswers.Q5);
+
+prompt1 = 'What is the last name of the lead author of the study? ';
+prompt2 = 'What year were the results published? ';
+prompt3 = 'What is the identifying name of this surface, i.e. "220Grit"? ';
+SurfAnswers.Q678 = inputdlg({prompt1,prompt2,prompt3},...
+                              'Roughness Information', [1 50; 1 50; 1 50]);
+end
+% -------------------------------------------------------------------------
+function ScannerAnswers = ScannerQuestionare()
+prompt1 = 'What is the name and model of the profiler/scanner? ';
+prompt2 = 'What is the uncertainty in the measurement of surface heights in microns? ';
+ScannerAnswers.Q1 = inputdlg({prompt1,prompt2},...
+                             'Scanner Information',[1 50;1 50]);
+end
+% -------------------------------------------------------------------------
+function checkAnswer(S)
+if isempty(S)
+    error('Please, select a proper answer and don''t close the dialog')
+end
+end
+
+% EXPORT FUNCTIONS --------------------------------------------------------
+function exportSurfaceStatistics(SurfStruct,SurfAnswers,ScannerAnswers)
+
+% Put surface statistics in an excel file
+Results = struct2cell(SurfStruct);
+Fields=fieldnames(SurfStruct);
+
+SurfName = SurfAnswers2filename(SurfAnswers);
+ScannerName = ScannerAnswers.Q1{1};
+ScannerInfo = ScannerAnswers.Q1{2};
+
+varNames = {'Streamwise length of scan (mm)';
+    'Spanwise length of scan (mm)';
+    'Minimum roughness height (mm)';
+    'Minimum roughness height (mm)';
+    'Peak-to-trough roughness height (mm)';
+    'Average 5 peak-to-trough roughness height (mm)';
+    'Average roughness height (mm)';
+    'Average of absolute value of the height fluctuations (mm)';
+    'Root-mean-square of the total height (mm)';
+    'Root-mean-square of the height fluctuations (mm)';
+    'Skewness of the height fluctuations';
+    'Flatness of the height fluctuations';
+    'Effective Slope in the steamwise direction';
+    'Correlation length in the steamwise direction';
+    'Effective Slope in the spanwise direction';
+    'Correlation length in the spanwise direction';};
+
+%Write data to Excel spreadsheet
+write2excel(SurfName,ScannerName,'A1:A2');
+write2excel(SurfName,ScannerInfo,'B1:B2');
+write2excel(SurfName,varNames,'D1:D16');
+write2excel(SurfName,Fields(7:22),'E1:E16');
+write2excel(SurfName,Results(7:22),'F1:F16');
+end
+% -------------------------------------------------------------------------
+function SurfName = SurfAnswers2filename(SurfAnswers)
+SurfName = ['SurfaceStatistics_'...
+           SurfAnswers.Q1 '_'...
+           SurfAnswers.Q2 '_'...
+           SurfAnswers.Q3 '_'...
+           SurfAnswers.Q4 '_'...
+           SurfAnswers.Q5{1} '_'...
+           SurfAnswers.Q678{1} '_'...
+           SurfAnswers.Q678{2} '_'...
+           SurfAnswers.Q678{3} '.xls'];
+end
+% -------------------------------------------------------------------------
+function write2excel(filename,field,range)
+% Fix the issue in which non-PC MATLAB is unnable to properly export Excel
+% files
+if ~ispc
+    xlwrite(filename,field,range);
+else
+    xlswrite(filename,field,range);
+end
 end
