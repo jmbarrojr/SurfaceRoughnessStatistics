@@ -29,7 +29,8 @@
 
 clc, clear
 
-%% Choose file to analyze
+%% MAIN SECTION
+% Choose file to analyze
 [filename,pathname] = uigetfile({'*.mat';'*.txt';'*.csv'},...
                       'Choose a Matlab data file with x,y,z coordinates.');
 if isempty(filename) == 1 || ~ischar(filename)
@@ -38,14 +39,14 @@ end
 % Or  paste in the file
 % filename = ['Processed_Surface02_8_12_25grit_CURVTILT.mat'];
 
-%% Roughness and Scanner Questionare
+% Roughness and Scanner Questionare
 SurfAnswers = RoghnessQuestionare();
-ScannerAnswers = ScannerQuestionare();
+ScannerAnswers = ScannerQuestionare(SurfAnswers);
 
-%% Run function to calculate statistics
+% Run function to calculate statistics
 Surface = getSurfProperties(fullfile(pathname,filename));
 
-%% Export Surface Statistics
+% Export Surface Statistics
 exportSurfaceStatistics(Surface,SurfAnswers,ScannerAnswers)
 
 %% SUPPORTING FUNCTIONS
@@ -297,11 +298,15 @@ SurfAnswers.Q678 = inputdlg({prompt1,prompt2,prompt3},...
                               'Roughness Information', [1 50; 1 50; 1 50]);
 end
 % -------------------------------------------------------------------------
-function ScannerAnswers = ScannerQuestionare()
+function ScannerAnswers = ScannerQuestionare(SurfAnswers)
+if strcmp(SurfAnswers.Q4,'Experiments')
 prompt1 = 'What is the name and model of the profiler/scanner? ';
 prompt2 = 'What is the uncertainty in the measurement of surface heights in microns? ';
 ScannerAnswers.Q1 = inputdlg({prompt1,prompt2},...
                              'Scanner Information',[1 50;1 50]);
+else
+    ScannerAnswers.Q1 = {'N/A';'N/A'};
+end
 end
 % -------------------------------------------------------------------------
 function checkAnswer(S)
