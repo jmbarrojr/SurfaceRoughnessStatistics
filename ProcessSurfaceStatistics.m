@@ -324,7 +324,7 @@ Fields=fieldnames(SurfStruct);
 
 SurfName = SurfAnswers2filename(SurfAnswers);
 ScannerName = {'Scanner name and model';'Scanner uncertainty (microns)'};
-ScannerInfo = [ScannerAnswers.Q1; ScannerAnswers.Q1];
+ScannerInfo = ScannerAnswers.Q1;
 
 varNames = {'Streamwise length of scan (mm)';
     'Spanwise length of scan (mm)';
