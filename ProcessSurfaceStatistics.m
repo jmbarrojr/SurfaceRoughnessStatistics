@@ -311,8 +311,16 @@ end
 end
 % -------------------------------------------------------------------------
 function checkAnswer(S)
-if isempty(S)
-    error('Please, select a proper answer and don''t close the dialog')
+if iscell(S) && ~isempty(S)
+    for n=1:length(S)
+        if isempty(S{n})
+        error('Please, select/type a proper answer and/or don''t close the dialog')
+        end
+    end
+else
+    if isempty(S)
+        error('Please, select/type a proper answer and/or don''t close the dialog')
+    end
 end
 end
 
