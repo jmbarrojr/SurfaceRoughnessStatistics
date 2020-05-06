@@ -135,6 +135,7 @@ x = SurfStruct.obj.(xname);
 switch SurfStruct.type
     case '1D-profile'
         Lx = max(x) - min(x);
+        Ly = [];
     case '2D-surface'
         Lx = max(x(:)) - min(x(:));
         yname = SurfStruct.varNames{2};
