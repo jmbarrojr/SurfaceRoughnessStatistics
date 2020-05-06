@@ -297,6 +297,7 @@ prompt2 = 'What year were the results published? ';
 prompt3 = 'What is the identifying name of this surface, i.e. "220Grit"? ';
 SurfAnswers.Q678 = inputdlg({prompt1,prompt2,prompt3},...
                               'Roughness Information', [1 50; 1 50; 1 50]);
+checkAnswer(SurfAnswers.Q678)
 end
 % -------------------------------------------------------------------------
 function ScannerAnswers = ScannerQuestionare(SurfAnswers)
