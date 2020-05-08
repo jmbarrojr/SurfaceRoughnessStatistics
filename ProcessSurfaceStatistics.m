@@ -330,9 +330,9 @@ function exportSurfaceStatistics(SurfStruct,SurfAnswers,ScannerAnswers)
 
 % Put surface statistics in an excel file
 Results = struct2cell(SurfStruct);
-Fields=fieldnames(SurfStruct);
+Fields = fieldnames(SurfStruct);
 
-SurfName = SurfAnswers2filename(SurfAnswers);
+[pathname,filename] = SurfAnswers2filename(SurfAnswers);
 ScannerName = {'Scanner name and model';'Scanner uncertainty (microns)'};
 ScannerInfo = ScannerAnswers.Q1;
 
@@ -354,15 +354,30 @@ varNames = {'Streamwise length of scan (mm)';
     'Correlation length in the spanwise direction';};
 
 %Write data to Excel spreadsheet
-write2excel(SurfName,ScannerName,'A1:A2');
-write2excel(SurfName,ScannerInfo,'B1:B2');
-write2excel(SurfName,varNames,'D1:D16');
-write2excel(SurfName,Fields(7:22),'E1:E16');
-write2excel(SurfName,Results(7:22),'F1:F16');
+write2excel(fullfile(pathname,filename),ScannerName,'A1:A2');
+write2excel(fullfile(pathname,filename),ScannerInfo,'B1:B2');
+write2excel(fullfile(pathname,filename),varNames,'D1:D16');
+write2excel(fullfile(pathname,filename),Fields(7:22),'E1:E16');
+write2excel(fullfile(pathname,filename),Results(7:22),'F1:F16');
+
+exportSurfaceMAT(pathname,filename,SurfStruct,SurfAnswers,ScannerAnswers)
 end
 % -------------------------------------------------------------------------
-function SurfName = SurfAnswers2filename(SurfAnswers)
-SurfName = ['SurfaceStatistics_'...
+function [dirName,fileName] = SurfAnswers2filename(SurfAnswers)
+pattern = [SurfAnswers.Q1 '_'...
+           SurfAnswers.Q2 '_'...
+           SurfAnswers.Q3 '_'...
+           SurfAnswers.Q4 '_'...
+           SurfAnswers.Q5{1} '_'...
+           SurfAnswers.Q678{1} '_'...
+           SurfAnswers.Q678{2} '_'...
+           SurfAnswers.Q678{3}];
+       
+dirName = fullfile(pwd,pattern);
+if ~isfolder(dirName)
+    mkdir(dirName)
+end
+fileName = ['SurfaceStatistics_'...
            SurfAnswers.Q1 '_'...
            SurfAnswers.Q2 '_'...
            SurfAnswers.Q3 '_'...
@@ -381,4 +396,16 @@ if ~ispc
 else
     xlswrite(filename,field,range);
 end
+end
+
+function exportSurfaceMAT(pathname,filename,SurfStruct,...
+                          SurfAnswers,ScannerAnswers)
+S.Author = SurfAnswers.Q678{1};
+fields = fieldnames(SurfStruct);
+for n=4:length(fields)
+    f = fields{n};
+    S.(f) = SurfStruct.(f);
+end
+filename = [filename(1:end-3) '.mat'];
+save(fullfile(pathname,filename),'S')
 end
