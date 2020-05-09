@@ -381,7 +381,8 @@ writecell(C2,fullfile(dirName,fileName),'Range','E1:F2')
 % Write Surface Statistics to MATLAB file
 exportSurfStats2mat(dirName,fileName,SurfStruct,SurfAnswers,ScannerAnswers)
 
-exportSurfaceMAT(pathname,filename,SurfStruct,SurfAnswers,ScannerAnswers)
+% Write Suface Data to MATLAB file
+exportSurfaceData2mat(dirName,fileName,SurfStruct)
 end
 % -------------------------------------------------------------------------
 function [dirName,fileName] = SurfAnswers2filename(SurfAnswers)
@@ -419,4 +420,21 @@ for n=1:length(fields)
 end
 filename = [filename(1:end-4) '.mat'];
 save(fullfile(pathname,filename),'Surface')
+end
+% -------------------------------------------------------------------------
+function exportSurfaceData2mat(dirName,fileName,SurfStruct)
+type = SurfStruct.type;
+switch type
+    case '1D-profile'
+        SurfaceData.X = SurfStruct.obj.X;
+        SurfaceData.Z = SurfStruct.obj.Z;
+    case '2D-surface'
+        SurfaceData.X = SurfStruct.obj.X;
+        SurfaceData.Y = SurfStruct.obj.Y;
+        SurfaceData.Z = SurfStruct.obj.Z;
+end
+prt = 'Statistics'; l = length(prt);
+ind = strfind(fileName,prt);
+fileName = [fileName(1:ind-1) 'Data' fileName(ind+l:end-4) '.mat'];
+save(fullfile(dirName,fileName),'SurfaceData')
 end
