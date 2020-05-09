@@ -1,9 +1,9 @@
 % This script processes surface roughness statistics to support the
 % roughness database hosted by the University of Southampton.
 %
-%  The development idea of this script is to require minimum users
-%  interface when running the code. In other words, there is no need for
-%  code manipulation or changes to fully export the roughness statistics.
+% The development idea of this script is to require minimum users
+% interface when running the code. In other words, there is no need for
+% code manipulation or changes to fully export the roughness statistics.
 %
 % Two type of surfaces are supported: 1D line profiles, or 3D surface
 % scans.
