@@ -21,7 +21,7 @@
 % The supporting functions are nested in the bottom of this script.
 % Changing them may like break the code. If a bug was detected, either
 % open an issue github at https://github.com/jmbarrojr/SurfaceRoughnessStatistics/issues
-% send an email to julio.barros@gmail.com using "[BUG]" prefix in the
+% or send an email to julio.barros@gmail.com using "[BUG]" prefix in the
 % email's subject.
 %
 %
