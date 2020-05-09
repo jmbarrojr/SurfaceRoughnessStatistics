@@ -340,9 +340,12 @@ function exportSurfaceStatistics(SurfStruct,SurfAnswers,ScannerAnswers)
 % Cleanup Struct for Excel file
 S = cleanUpStruct(SurfStruct);
 
-% Put surface statistics in an excel file
-Results = struct2cell(SurfStruct);
-Fields = fieldnames(SurfStruct);
+% Put surface statistics in an Excel file structure
+Results = struct2cell(S);
+Fields = fieldnames(S);
+% Chop unnecessary information for Excel file
+Results = Results(4:end);
+Fields = Fields(4:end);
 
 [pathname,filename] = SurfAnswers2filename(SurfAnswers);
 ScannerName = {'Scanner name and model';'Scanner uncertainty (microns)'};
@@ -365,12 +368,15 @@ varNames = {'Streamwise length of scan (mm)';
     'Effective Slope in the spanwise direction';
     'Correlation length in the spanwise direction';};
 
-%Write data to Excel spreadsheet
-write2excel(fullfile(pathname,filename),ScannerName,'A1:A2');
-write2excel(fullfile(pathname,filename),ScannerInfo,'B1:B2');
-write2excel(fullfile(pathname,filename),varNames,'D1:D16');
-write2excel(fullfile(pathname,filename),Fields(7:22),'E1:E16');
-write2excel(fullfile(pathname,filename),Results(7:22),'F1:F16');
+% Concatenate cells for Excel file
+C = [varNames Fields Results];
+C2 = [ScannerName ScannerInfo];
+% Write data to Excel spreadsheet
+writecell(C,fullfile(dirName,fileName));
+writecell(C2,fullfile(dirName,fileName),'Range','E1:F2')
+
+% Write Surface Statistics to MATLAB file
+exportSurfStats2mat(dirName,fileName,SurfStruct,SurfAnswers,ScannerAnswers)
 
 exportSurfaceMAT(pathname,filename,SurfStruct,SurfAnswers,ScannerAnswers)
 end
@@ -400,17 +406,7 @@ fileName = ['SurfaceStatistics_'...
            SurfAnswers.Q678{3} '.xls'];
 end
 % -------------------------------------------------------------------------
-function write2excel(filename,field,range)
-% Fix the issue in which non-PC MATLAB is unnable to properly export Excel
-% files
-if ~ispc
-    xlwrite(filename,field,range);
-else
-    xlswrite(filename,field,range);
-end
-end
-% -------------------------------------------------------------------------
-function exportSurfaceMAT(pathname,filename,SurfStruct,SurfAnswers,ScannerAnswers)
+function exportSurfStats2mat(pathname,filename,SurfStruct,SurfAnswers,ScannerAnswers)
 Surface.Author = SurfAnswers.Q678{1};
 Surface.year = SurfAnswers.Q678{2};
 fields = fieldnames(SurfStruct);
@@ -418,6 +414,6 @@ for n=1:length(fields)
     f = fields{n};
     Surface.(f) = SurfStruct.(f);
 end
-filename = [filename(1:end-3) '.mat'];
+filename = [filename(1:end-4) '.mat'];
 save(fullfile(pathname,filename),'Surface')
 end
