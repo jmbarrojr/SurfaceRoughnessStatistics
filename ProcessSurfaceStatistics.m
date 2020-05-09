@@ -270,7 +270,7 @@ for n=4:length(fields)
 end
 end
 
-% QUESTIONARE FUNCTIONS ---------------------------------------------------
+% QUESTIONNAIRE FUNCTIONS ---------------------------------------------------
 function SurfAnswers = RoghnessQuestionnaire()
 % Get information to name the Excel output file
 % Surface information
