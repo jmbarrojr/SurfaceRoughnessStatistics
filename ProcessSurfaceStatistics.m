@@ -347,7 +347,10 @@ Fields = fieldnames(S);
 Results = Results(4:end);
 Fields = Fields(4:end);
 
-[pathname,filename] = SurfAnswers2filename(SurfAnswers);
+% Prepare base directory and filename
+[dirName,fileName] = SurfAnswers2filename(SurfAnswers);
+
+% Prepare Scanner information
 ScannerName = {'Scanner name and model';'Scanner uncertainty (microns)'};
 ScannerInfo = ScannerAnswers.Q1;
 
