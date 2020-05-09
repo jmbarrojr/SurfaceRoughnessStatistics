@@ -57,7 +57,7 @@ Surface = determineSurfaceType(Surface);
 Surface = determineXandYdir(Surface);
 Surface = roughPhysicalProp(Surface);
 Surface = roughnessStats(Surface);
-Surface = cleanUpStruct(Surface);
+%Surface = cleanUpStruct(Surface);
 end
 
 % LOADING MATLAB FUNCTIONS ------------------------------------------------
@@ -337,6 +337,8 @@ end
 
 % EXPORT FUNCTIONS --------------------------------------------------------
 function exportSurfaceStatistics(SurfStruct,SurfAnswers,ScannerAnswers)
+% Cleanup Struct for Excel file
+S = cleanUpStruct(SurfStruct);
 
 % Put surface statistics in an excel file
 Results = struct2cell(SurfStruct);
