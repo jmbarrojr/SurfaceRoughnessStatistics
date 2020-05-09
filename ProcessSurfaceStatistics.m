@@ -379,7 +379,7 @@ writecell(C,fullfile(dirName,fileName));
 writecell(C2,fullfile(dirName,fileName),'Range','E1:F2')
 
 % Write Surface Statistics to MATLAB file
-exportSurfStats2mat(dirName,fileName,SurfStruct,SurfAnswers,ScannerAnswers)
+exportSurfStats2mat(dirName,fileName,S,SurfAnswers,ScannerAnswers)
 
 % Write Suface Data to MATLAB file
 exportSurfaceData2mat(dirName,fileName,SurfStruct)
