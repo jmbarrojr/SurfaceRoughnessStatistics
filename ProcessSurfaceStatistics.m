@@ -57,6 +57,7 @@ Surface = determineSurfaceType(Surface);
 Surface = determineXandYdir(Surface);
 Surface = roughPhysicalProp(Surface);
 Surface = roughnessStats(Surface);
+Surface = cleanUpStruct(Surface);
 end
 
 % LOADING MATLAB FUNCTIONS ------------------------------------------------
@@ -259,6 +260,15 @@ l = length(C);
 C = C((l+1)/2:end); % Get only half of C
 ind = find(diff(C) > 0,1);
 end
+% -------------------------------------------------------------------------
+function S = cleanUpStruct(SurfStruct)
+S = struct();
+fields = fieldnames(SurfStruct);
+for n=4:length(fields)
+    f = fields{n};
+    S.(f) = SurfStruct.(f);
+end
+end
 
 % QUESTIONARE FUNCTIONS ---------------------------------------------------
 function SurfAnswers = RoghnessQuestionnaire()
@@ -397,16 +407,15 @@ else
     xlswrite(filename,field,range);
 end
 end
-
-function exportSurfaceMAT(pathname,filename,SurfStruct,...
-                          SurfAnswers,ScannerAnswers)
-S.Author = SurfAnswers.Q678{1};
-S.year = SurfAnswers.Q678{2};
+% -------------------------------------------------------------------------
+function exportSurfaceMAT(pathname,filename,SurfStruct,SurfAnswers,ScannerAnswers)
+Surface.Author = SurfAnswers.Q678{1};
+Surface.year = SurfAnswers.Q678{2};
 fields = fieldnames(SurfStruct);
-for n=4:length(fields)
+for n=1:length(fields)
     f = fields{n};
-    S.(f) = SurfStruct.(f);
+    Surface.(f) = SurfStruct.(f);
 end
 filename = [filename(1:end-3) '.mat'];
-save(fullfile(pathname,filename),'S')
+save(fullfile(pathname,filename),'Surface')
 end
