@@ -40,8 +40,8 @@ end
 % filename = ['Processed_Surface02_8_12_25grit_CURVTILT.mat'];
 
 % Roughness and Scanner Questionare
-SurfAnswers = RoghnessQuestionare();
-ScannerAnswers = ScannerQuestionare(SurfAnswers);
+SurfAnswers = RoghnessQuestionnaire();
+ScannerAnswers = ScannerQuestionnaire(SurfAnswers);
 
 % Run function to calculate statistics
 Surface = getSurfProperties(fullfile(pathname,filename));
@@ -261,7 +261,7 @@ ind = find(diff(C) > 0,1);
 end
 
 % QUESTIONARE FUNCTIONS ---------------------------------------------------
-function SurfAnswers = RoghnessQuestionare()
+function SurfAnswers = RoghnessQuestionnaire()
 % Get information to name the Excel output file
 % Surface information
 prompt = 'What kind of suface is it? ';
@@ -300,7 +300,7 @@ SurfAnswers.Q678 = inputdlg({prompt1,prompt2,prompt3},...
 checkAnswer(SurfAnswers.Q678)
 end
 % -------------------------------------------------------------------------
-function ScannerAnswers = ScannerQuestionare(SurfAnswers)
+function ScannerAnswers = ScannerQuestionnaire(SurfAnswers)
 if strcmp(SurfAnswers.Q4,'Experiments')
 prompt1 = 'What is the name and model of the profiler/scanner? ';
 prompt2 = 'What is the uncertainty in the measurement of surface heights in microns? ';
@@ -401,6 +401,7 @@ end
 function exportSurfaceMAT(pathname,filename,SurfStruct,...
                           SurfAnswers,ScannerAnswers)
 S.Author = SurfAnswers.Q678{1};
+S.year = SurfAnswers.Q678{2};
 fields = fieldnames(SurfStruct);
 for n=4:length(fields)
     f = fields{n};
