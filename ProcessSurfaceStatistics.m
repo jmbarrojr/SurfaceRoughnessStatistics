@@ -424,15 +424,11 @@ save(fullfile(pathname,filename),'Surface')
 end
 % -------------------------------------------------------------------------
 function exportSurfaceData2mat(dirName,fileName,SurfStruct)
-type = SurfStruct.type;
-switch type
-    case '1D-profile'
-        SurfaceData.X = SurfStruct.obj.X;
-        SurfaceData.Z = SurfStruct.obj.Z;
-    case '2D-surface'
-        SurfaceData.X = SurfStruct.obj.X;
-        SurfaceData.Y = SurfStruct.obj.Y;
-        SurfaceData.Z = SurfStruct.obj.Z;
+varNames = SurfStruct.varNames;
+N = length(varNames);
+for n=1:N
+    var = varNames{n};
+    SurfaceData.(var) = SurfStruct.obj.(var);
 end
 prt = 'Statistics'; l = length(prt);
 ind = strfind(fileName,prt);
