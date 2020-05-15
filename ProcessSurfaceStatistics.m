@@ -194,19 +194,21 @@ SurfStruct.Fl = kurtosis(z(:));
 % Effective slope and correlation length
 xname = SurfStruct.varNames{1};
 x = SurfStruct.obj.(xname);
-SurfStruct.Esx = EffectiveSlope(x,z,SurfStruct.Xdir);
+SurfStruct.Esx = EffectiveSlope(x,z,SurfStruct.Xdir,SurfStruct.Lx);
 SurfStruct.Rlx = CorrelationLenght(x,z,SurfStruct.Xdir);
 switch SurfStruct.type
     case '2D-surface'
         yname = SurfStruct.varNames{2};
         y = SurfStruct.obj.(yname);
-        SurfStruct.Esy = EffectiveSlope(y,z,SurfStruct.Ydir);
+        SurfStruct.Esy = EffectiveSlope(y,z,SurfStruct.Ydir,SurfStruct.Ly);
         SurfStruct.Rlz = CorrelationLenght(y,z,SurfStruct.Ydir);
+    otherwise
+        SurfStruct.Esy = [];
+        SurfStruct.Rlz = [];
 end
-
 end
 % -------------------------------------------------------------------------
-function Es = EffectiveSlope(X,Z,dir)
+function Es = EffectiveSlope(X,Z,dir,L)
 if dir == 1
     dx = X(2,1) - X(1,1);
     mean_dir = 2;
@@ -214,8 +216,7 @@ else
     dx = X(1,2) - X(1,1);
     mean_dir = 1;
 end 
-L = max(X(:)) - min(X(:));
-[dzdx,~] = gradient(Z,dx);
+dzdx = diff(Z,1,dir) ./ diff(X,1,dir);
 Es = 1/L .* mean( trapz(abs(dzdx),dir).*dx, mean_dir); % Efective Slope;
 end
 % -------------------------------------------------------------------------
