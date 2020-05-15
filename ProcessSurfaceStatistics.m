@@ -44,14 +44,14 @@ SurfAnswers = RoghnessQuestionnaire();
 ScannerAnswers = ScannerQuestionnaire(SurfAnswers);
 
 % Run function to calculate statistics
-Surface = getSurfProperties(fullfile(pathname,filename));
+Surface = getSurfStatistics(fullfile(pathname,filename));
 
 % Export Surface Statistics
 exportSurfaceStatistics(Surface,SurfAnswers,ScannerAnswers)
 
 %% SUPPORTING FUNCTIONS
 % MAIN FUNCTION -----------------------------------------------------------
-function Surface = getSurfProperties(filename)
+function Surface = getSurfStatistics(filename)
 Surface = loadSurface(filename);
 Surface = determineSurfaceType(Surface);
 Surface = determineXandYdir(Surface);
