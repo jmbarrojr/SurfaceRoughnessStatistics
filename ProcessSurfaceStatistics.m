@@ -32,7 +32,7 @@ clc, clear
 %% MAIN SECTION
 % Choose file to analyze
 [filename,pathname] = uigetfile({'*.mat';'*.txt';'*.csv'},...
-                      'Choose a Matlab data file with x,y,z coordinates.');
+    'Choose a Matlab data file with x,y,z coordinates.');
 if isempty(filename) == 1 || ~ischar(filename)
     error('No file was selected')
 end
@@ -40,7 +40,8 @@ end
 % filename = ['Processed_Surface02_8_12_25grit_CURVTILT.mat'];
 
 % Roughness and Scanner Questionare
-SurfAnswers = RoghnessQuestionnaire();
+batch = true;
+SurfAnswers = RoghnessQuestionnaire(batch);
 ScannerAnswers = ScannerQuestionnaire(SurfAnswers);
 
 % Run function to calculate statistics
@@ -149,7 +150,7 @@ end
 
 % SURFACE ROUGHNESS STATISTICS --------------------------------------------
 function SurfStruct = roughnessStats(SurfStruct)
-zname = SurfStruct.varNames{end}; 
+zname = SurfStruct.varNames{end};
 
 % Height information is the last variable.
 z = SurfStruct.obj.(zname);
@@ -215,7 +216,7 @@ if dir == 1
 else
     dx = X(1,2) - X(1,1);
     mean_dir = 1;
-end 
+end
 dzdx = diff(Z,1,dir) ./ diff(X,1,dir);
 Es = 1/L .* mean( trapz(abs(dzdx),dir).*dx, mean_dir); % Efective Slope;
 end
@@ -225,7 +226,7 @@ if dir == 1
     dx = X(2,1) - X(1,1);
 else
     dx = X(1,2) - X(1,1);
-end 
+end
 s = size(Z,dir);
 % Compute the correlation length in the Y-dir
 [lags,Zcorr] = MeanAutoCorr_FFT(Z,dir);
@@ -235,7 +236,7 @@ Rlx = interp1(Zcorr(s:s+ind),lags(s:s+ind),1./exp(1),'linear');
 end
 % -------------------------------------------------------------------------
 function [lags,C] = MeanAutoCorr_FFT(A,dir)
-S = size(A);                 
+S = size(A);
 s = S(dir);                      % Get the size of A in the desired direction
 nfft = 2*s-1;                    % Make the FFT size to be 2*s-1 to make the center as 0
 A = A - mean(A(:));              % Remove any mean in the surface
@@ -272,61 +273,85 @@ end
 end
 
 % QUESTIONNAIRE FUNCTIONS ---------------------------------------------------
-function SurfAnswers = RoghnessQuestionnaire()
-% Get information to name the Excel output file
-% Surface information
-prompt = 'What kind of suface is it? ';
-q1 = 'Homogeneous'; q2 = 'Heterogeneous';
-SurfAnswers.Q1 = questdlg(prompt,'Roughness Information',...
-                     q1,q2,q1);
-checkAnswer(SurfAnswers.Q1);
-
-prompt = 'Is the roughness ...';
-q1 = 'Regular'; q2 = 'Irregular';
-SurfAnswers.Q2 = questdlg(prompt,'Roughness Information',...
-                     q1, q2, q1);
-checkAnswer(SurfAnswers.Q2);
-
-prompt = 'Are results for a ...';
-q1 = 'TBL'; q2 = 'Pipe'; q3 = 'Channel';
-SurfAnswers.Q3 = questdlg(prompt,'Roughness Information',...
-                     q1, q2, q3, q1);
-checkAnswer(SurfAnswers.Q3);
-
-prompt = 'Are results from ...';
-q1 = 'Experiments'; q2 = 'Simulations';
-SurfAnswers.Q4 = questdlg(prompt,'Roughness Information',...
-                     q1,q2,q1);
-checkAnswer(SurfAnswers.Q4);
-
-prompt = 'What is the general descriptor of this surface, .i.e. "Sandgrain"?';
-SurfAnswers.Q5 = inputdlg(prompt,'Roughness Information',[1 50]);
-SurfAnswers.Q5 = SurfAnswers.Q5{1};
-checkAnswer(SurfAnswers.Q5);
-
-prompt1 = 'What is the last name of the lead author of the study? ';
-prompt2 = 'What year were the results published? ';
-prompt3 = 'What is the identifying name of this surface, i.e. "220Grit"? ';
-prompt4 = 'Include the doi of the publication';
-temp = inputdlg({prompt1,prompt2,prompt3,prompt4},...
-                              'Roughness Information',...
-                               [1 50; 1 50; 1 50; 1 50]);
-SurfAnswers.Q6 = temp{1};
-checkAnswer(SurfAnswers.Q6)
-SurfAnswers.Q7 = temp{2};
-checkAnswer(SurfAnswers.Q7)
-SurfAnswers.Q8 = temp{3};
-checkAnswer(SurfAnswers.Q8)
-SurfAnswers.Q9 = temp{4};
-checkAnswer(SurfAnswers.Q9)
+function SurfAnswers = RoghnessQuestionnaire(batch)
+switch batch
+    case true
+        SurfAnswers = loadQuestionnaire('Questionnaire_Batch.txt');
+    otherwise
+        % Get information to name the Excel output file and directory
+        % Surface information
+        prompt = 'What kind of suface is it? ';
+        q1 = 'Homogeneous'; q2 = 'Heterogeneous';
+        SurfAnswers.Q1 = questdlg(prompt,'Roughness Information',...
+            q1,q2,q1);
+        checkAnswer(SurfAnswers.Q1);
+        
+        prompt = 'Is the roughness ...';
+        q1 = 'Regular'; q2 = 'Irregular';
+        SurfAnswers.Q2 = questdlg(prompt,'Roughness Information',...
+            q1, q2, q1);
+        checkAnswer(SurfAnswers.Q2);
+        
+        prompt = 'Are results for a ...';
+        q1 = 'TBL'; q2 = 'Pipe'; q3 = 'Channel';
+        SurfAnswers.Q3 = questdlg(prompt,'Roughness Information',...
+            q1, q2, q3, q1);
+        checkAnswer(SurfAnswers.Q3);
+        
+        prompt = 'Are results from ...';
+        q1 = 'Experiments'; q2 = 'Simulations';
+        SurfAnswers.Q4 = questdlg(prompt,'Roughness Information',...
+            q1,q2,q1);
+        checkAnswer(SurfAnswers.Q4);
+        
+        prompt = 'What is the general descriptor of this surface, .i.e. "Sandgrain"?';
+        SurfAnswers.Q5 = inputdlg(prompt,'Roughness Information',[1 50]);
+        SurfAnswers.Q5 = SurfAnswers.Q5{1};
+        checkAnswer(SurfAnswers.Q5);
+        
+        prompt1 = 'What is the last name of the lead author of the study? ';
+        prompt2 = 'What year were the results published? ';
+        prompt3 = 'What is the identifying name of this surface, i.e. "220Grit"? ';
+        prompt4 = 'Include the doi of the publication';
+        temp = inputdlg({prompt1,prompt2,prompt3,prompt4},...
+            'Roughness Information',...
+            [1 50; 1 50; 1 50; 1 50]);
+        SurfAnswers.Q6 = temp{1};
+        checkAnswer(SurfAnswers.Q6)
+        SurfAnswers.Q7 = temp{2};
+        checkAnswer(SurfAnswers.Q7)
+        SurfAnswers.Q8 = temp{3};
+        checkAnswer(SurfAnswers.Q8)
+        SurfAnswers.Q9 = temp{4};
+        checkAnswer(SurfAnswers.Q9)
+end
+end
+% -------------------------------------------------------------------------
+function SurfAnswers = loadQuestionnaire(file)
+% Open the questionnaire
+fid = fopen(file,'r');
+n=1;
+% Look for the answers in the questionnaire
+while ~feof(fid)
+    line = strtrim(fgetl(fid));
+    
+    if isempty(line) || all(isspace(line)) || strncmp(line, '#', 1)
+    else
+        Q = ['Q' num2str(n)];
+        SurfAnswers.(Q) = line;
+        n = n+1;
+    end
+end
+% Close the file
+fclose(fid);
 end
 % -------------------------------------------------------------------------
 function ScannerAnswers = ScannerQuestionnaire(SurfAnswers)
 if strcmp(SurfAnswers.Q4,'Experiments')
-prompt1 = 'What is the name and model of the profiler/scanner? ';
-prompt2 = 'What is the uncertainty in the measurement of surface heights in microns? ';
-ScannerAnswers.Q1 = inputdlg({prompt1,prompt2},...
-                             'Scanner Information',[1 50;1 50]);
+    prompt1 = 'What is the name and model of the profiler/scanner? ';
+    prompt2 = 'What is the uncertainty in the measurement of surface heights in microns? ';
+    ScannerAnswers.Q1 = inputdlg({prompt1,prompt2},...
+        'Scanner Information',[1 50;1 50]);
 else
     ScannerAnswers.Q1 = {'N/A';'N/A'};
 end
@@ -336,7 +361,7 @@ function checkAnswer(S)
 if iscell(S) && ~isempty(S)
     for n=1:length(S)
         if isempty(S{n})
-        error('Please, select/type a proper answer and/or don''t close the dialog')
+            error('Please, select/type a proper answer and/or don''t close the dialog')
         end
     end
 else
@@ -398,14 +423,14 @@ end
 % -------------------------------------------------------------------------
 function [dirName,fileName] = SurfAnswers2filename(SurfAnswers)
 pattern = [SurfAnswers.Q1 '_'...
-           SurfAnswers.Q2 '_'...
-           SurfAnswers.Q3 '_'...
-           SurfAnswers.Q4 '_'...
-           SurfAnswers.Q5 '_'...
-           SurfAnswers.Q6 '_'...
-           SurfAnswers.Q7 '_'...
-           SurfAnswers.Q8];
-       
+    SurfAnswers.Q2 '_'...
+    SurfAnswers.Q3 '_'...
+    SurfAnswers.Q4 '_'...
+    SurfAnswers.Q5 '_'...
+    SurfAnswers.Q6 '_'...
+    SurfAnswers.Q7 '_'...
+    SurfAnswers.Q8];
+
 % Make the directory structure
 folders = {'Surfaces','Flow documentation','Paper'};
 dirName = fullfile(pwd,pattern);
@@ -418,19 +443,18 @@ if ~isfolder(dirName)
         end
     end
 end
-
 % This is the directory in which the surface related files will be saved
 dirName = fullfile(dirName,folders{1});
 
 fileName = ['SurfaceStatistics_'...
-           SurfAnswers.Q1 '_'...
-           SurfAnswers.Q2 '_'...
-           SurfAnswers.Q3 '_'...
-           SurfAnswers.Q4 '_'...
-           SurfAnswers.Q5 '_'...
-           SurfAnswers.Q6 '_'...
-           SurfAnswers.Q7 '_'...
-           SurfAnswers.Q8 '.xls'];
+    SurfAnswers.Q1 '_'...
+    SurfAnswers.Q2 '_'...
+    SurfAnswers.Q3 '_'...
+    SurfAnswers.Q4 '_'...
+    SurfAnswers.Q5 '_'...
+    SurfAnswers.Q6 '_'...
+    SurfAnswers.Q7 '_'...
+    SurfAnswers.Q8 '.xls'];
 end
 % -------------------------------------------------------------------------
 function exportSurfStats2mat(pathname,filename,SurfStruct,SurfAnswers,ScannerAnswers)
