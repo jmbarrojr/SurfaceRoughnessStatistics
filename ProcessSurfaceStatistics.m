@@ -398,10 +398,22 @@ pattern = [SurfAnswers.Q1 '_'...
            SurfAnswers.Q6{2} '_'...
            SurfAnswers.Q6{3}];
        
+% Make the directory structure
+folders = {'Surfaces','Flow documentation','Paper'};
 dirName = fullfile(pwd,pattern);
 if ~isfolder(dirName)
     mkdir(dirName)
+    for n=1:length(folders)
+        dir = fullfile(dirName,folders{n});
+        if ~isfolder(dir)
+            mkdir(dir)
+        end
+    end
 end
+
+% This is the directory in which the surface related files will be saved
+dirName = fullfile(dirName,folders{1});
+
 fileName = ['SurfaceStatistics_'...
            SurfAnswers.Q1 '_'...
            SurfAnswers.Q2 '_'...
