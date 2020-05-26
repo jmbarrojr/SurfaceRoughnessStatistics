@@ -8,3 +8,6 @@
 *.mat
 *.ASC
 *.zip
+*.dat
+*.DAT
+example/*.txt
