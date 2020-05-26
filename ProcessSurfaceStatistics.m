@@ -37,7 +37,9 @@ batch = true;
 
 %% MAIN SECTION
 % Choose file to analyze
-[filename,pathname] = uigetfile({'*.mat';'*.txt';'*.csv'},...
+[filename,pathname] = uigetfile({'*.mat;*.csv;*.asc;*.dat;*.xls;*.xlsx',...
+                       'Surface Files (*.mat,*.csv,*.asc,*.dat,*.xlx,*.xlsx)';...
+                                 '*.*','All Files(*.*)'},...
     'Choose a Matlab data file with x,y,z coordinates.');
 if isempty(filename) == 1 || ~ischar(filename)
     error('No file was selected')
@@ -54,7 +56,10 @@ Surface = getSurfStatistics(fullfile(pathname,filename));
 % Export Surface Statistics
 exportSurfaceStatistics(Surface,SurfAnswers,ScannerAnswers)
 
-%% SUPPORTING FUNCTIONS
+% Visualize Surface
+visualizeResults(Surface)
+
+%% ---------------- ROUGHNESS NESTED FUNCTIONS ---------------------------
 % MAIN FUNCTION -----------------------------------------------------------
 function Surface = getSurfStatistics(filename)
 Surface = loadSurface(filename);
@@ -64,16 +69,21 @@ Surface = roughPhysicalProp(Surface);
 Surface = roughnessStats(Surface);
 %Surface = cleanUpStruct(Surface);
 end
-
 % LOADING MATLAB FUNCTIONS ------------------------------------------------
 function SurfStruct = loadSurface(filename)
 ext = filename(end-3:end);
 switch ext
+    % MATLAB FORMAT FILE
     case '.mat'
         matObj = matfile(filename, 'Writable', false);
         SurfStruct.obj = matObj;
         %SurfStruct.varNames = who(matObj);
         SurfStruct.varProps = whos(matObj);
+    % TEXT BASED FILES    
+    case {'.asc','.ASC','.dat','.csv'}
+        SurfStruct = importSurfaceTxtData(filename);
+    case {'.xls','xlsx'}
+        SurfStruct = importSurfaceExcel(filename);
     otherwise
         error('Just matlab file loader implemented')
 end
@@ -91,7 +101,48 @@ for n=1:N
 end
 SurfStruct.varNames = varNames;
 end
-
+% IMPORT TEXT FILES -------------------------------------------------------
+function SurfStruct = importSurfaceTxtData(filename)
+A = importdata(filename);
+L = size(A,2);
+if L == 2
+    X = A(:,1);
+    Z = A(:,2);
+    save('temp.mat','X','Z')
+elseif L == 3
+    % Find # of columns and rows
+    A = sortrows(A,[1,2]);
+    J = find(A(1,1)-A(:,1) == 0, 1 , 'last');
+    A = sortrows(A,[2,1]);
+    I = find(A(1,2)-A(:,2) == 0, 1 , 'last');
+    X = reshape(A(:,1),I,J)';
+    Y = reshape(A(:,2),I,J)';
+    Z = reshape(A(:,3),I,J)';
+    save('temp.mat','X','Y','Z')
+end
+SurfStruct = loadSurface('temp.mat');
+end
+% IMPORT EXCEL FILES ------------------------------------------------------
+function SurfStruct = importSurfaceExcel(filename)
+A = readmatrix(filename);
+L = size(A,2);
+if L == 2
+    X = A(:,1);
+    Z = A(:,2);
+    save('temp.mat','X','Z')
+elseif L == 3
+    % Find # of columns and rows
+    A = sortrows(A,[1,2]);
+    J = find(A(1,1)-A(:,1) == 0, 1 , 'last');
+    A = sortrows(A,[2,1]);
+    I = find(A(1,2)-A(:,2) == 0, 1 , 'last');
+    X = reshape(A(:,1),I,J)';
+    Y = reshape(A(:,2),I,J)';
+    Z = reshape(A(:,3),I,J)';
+    save('temp.mat','X','Y','Z')
+end
+SurfStruct = loadSurface('temp.mat');
+end
 % TYPE OF SCAN FUNCTION ---------------------------------------------------
 function SurfStruct = determineSurfaceType(SurfStruct)
 L = length(SurfStruct.varNames);
@@ -400,37 +451,71 @@ Fields = Fields(4:end);
 
 % Prepare Scanner information
 ScannerName = {'Scanner name and model';'Scanner uncertainty (microns)'};
-ScannerInfo = ScannerAnswers.Q1;
+ScannerInfo = {ScannerAnswers.Q1;ScannerAnswers.Q2};
+
+% Prepare Surface information
+SurfaceName = {'Kind';'Type';'Flow Type';'Results';'Descriptor';'Author';...
+               'Year';'Identifier';'doi URL'};
+SurfaceInfo = {SurfAnswers.Q1;SurfAnswers.Q2;SurfAnswers.Q3;SurfAnswers.Q4;...
+SurfAnswers.Q5;SurfAnswers.Q6;SurfAnswers.Q7;SurfAnswers.Q8;SurfAnswers.Q9};
 
 varNames = {'Streamwise length of scan (mm)';
-    'Spanwise length of scan (mm)';
-    'Minimum roughness height (mm)';
-    'Maximum roughness height (mm)';
-    'Peak-to-trough roughness height (mm)';
-    'Average 5 peak-to-trough roughness height (mm)';
-    'Average roughness height (mm)';
-    'Average of absolute value of the height fluctuations (mm)';
-    'Root-mean-square of the total height (mm)';
-    'Root-mean-square of the height fluctuations (mm)';
-    'Skewness of the height fluctuations';
-    'Flatness of the height fluctuations';
-    'Effective Slope in the steamwise direction';
-    'Correlation length in the steamwise direction';
-    'Effective Slope in the spanwise direction';
-    'Correlation length in the spanwise direction';};
+            'Spanwise length of scan (mm)';
+            'Minimum roughness height (mm)';
+            'Maximum roughness height (mm)';
+            'Peak-to-trough roughness height (mm)';
+            'Average 5 peak-to-trough roughness height (mm)';
+            'Average roughness height (mm)';
+            'Average of absolute value of the height fluctuations (mm)';
+            'Root-mean-square of the total height (mm)';
+            'Root-mean-square of the height fluctuations (mm)';
+            'Skewness of the height fluctuations';
+            'Flatness of the height fluctuations';
+            'Effective Slope in the steamwise direction';
+            'Correlation length in the steamwise direction';
+            'Effective Slope in the spanwise direction';
+            'Correlation length in the spanwise direction';};
 
 % Concatenate cells for Excel file
 C = [varNames Fields Results];
 C2 = [ScannerName ScannerInfo];
+C3 = [SurfaceName SurfaceInfo];
+
 % Write data to Excel spreadsheet
-writecell(C,fullfile(dirName,fileName));
-writecell(C2,fullfile(dirName,fileName),'Range','E1:F2')
+writeExcelResults(C,C2,C3,fullfile(dirName,fileName))
 
 % Write Surface Statistics to MATLAB file
-exportSurfStats2mat(dirName,fileName,S,SurfAnswers,ScannerAnswers)
+exportSurfStats2mat(fullfile(dirName,fileName),S,SurfAnswers,ScannerAnswers)
 
 % Write Suface Data to MATLAB file
 exportSurfaceData2mat(dirName,fileName,SurfStruct)
+end
+% Write Results -----------------------------------------------------------
+function writeExcelResults(C,C2,C3,filename)
+if isfile(filename)
+    Nf = dir([filename(1:end-4) '*' filename(end-3:end)]);
+    N = length(Nf);
+    N = N+1;
+    filename = [filename(1:end-4) '(' num2str(N) ')' filename(end-3:end)];
+end
+writeResults(C,filename);
+writeResults(C2,filename,'E1:F2')
+writeResults(C3,filename,'E4:F12')
+end
+function writeResults(C,filename,Range)
+if ~ispc
+    if exist('Range','var')
+        writecell(C,filename,'Range',Range);
+    else
+        writecell(C,filename);
+    end
+else
+    if exist('Range','var')
+        xlswrite(C,filename,'Range',Range);
+    else
+        xlswrite(C,filename);
+    end
+end
 end
 % -------------------------------------------------------------------------
 function [dirName,fileName] = SurfAnswers2filename(SurfAnswers)
@@ -469,7 +554,7 @@ fileName = ['SurfaceStatistics_'...
     SurfAnswers.Q8 '.xls'];
 end
 % -------------------------------------------------------------------------
-function exportSurfStats2mat(pathname,filename,SurfStruct,SurfAnswers,ScannerAnswers)
+function exportSurfStats2mat(filename,SurfStruct,SurfAnswers,ScannerAnswers)
 Surface.Author = SurfAnswers.Q6;
 Surface.year = SurfAnswers.Q7;
 fields = fieldnames(SurfStruct);
@@ -477,11 +562,19 @@ for n=1:length(fields)
     f = fields{n};
     Surface.(f) = SurfStruct.(f);
 end
+% Make MATLAB filename
 filename = [filename(1:end-4) '.mat'];
-save(fullfile(pathname,filename),'Surface')
+% Check if file alredy exist
+if isfile(filename)
+    Nf = dir([filename(1:end-4) '*' filename(end-3:end)]);
+    N = length(Nf);
+    N = N + 1;
+    filename = [filename(1:end-4) '(' num2str(N) ')' filename(end-3:end)];
+end
+save(filename,'Surface')
 end
 % -------------------------------------------------------------------------
-function exportSurfaceData2mat(dirName,fileName,SurfStruct)
+function exportSurfaceData2mat(pathname,filename,SurfStruct)
 varNames = SurfStruct.varNames;
 N = length(varNames);
 for n=1:N
@@ -489,7 +582,37 @@ for n=1:N
     SurfaceData.(var) = SurfStruct.obj.(var);
 end
 prt = 'Statistics'; l = length(prt);
-ind = strfind(fileName,prt);
-fileName = [fileName(1:ind-1) 'Data' fileName(ind+l:end-4) '.mat'];
-save(fullfile(dirName,fileName),'SurfaceData')
+ind = strfind(filename,prt);
+% Make MATLAB file name
+filename = [filename(1:ind-1) 'Data' filename(ind+l:end-4) '.mat'];
+filename = fullfile(pathname,filename);
+% Check if file alredy exist
+if isfile(filename)
+    Nf = dir([filename(1:end-4) '*' filename(end-3:end)]);
+    N = length(Nf);
+    N = N + 1;
+    filename = [filename(1:end-4) '(' num2str(N) ')' filename(end-3:end)];
+end
+save(filename,'SurfaceData')
+end
+
+%% ------------------- VISUALIZE RESULTS ----------------------------------
+function visualizeResults(SurfStruct)
+type = SurfStruct.type;
+fig = figure(1);
+vars = SurfStruct.varNames;
+switch type
+    case '1D-profile'
+        vars = SurfStruct.varNames;
+        X = SurfStruct.obj.(vars{1});
+        Z = SurfStruct.obj.(vars{2});
+        p = plot(X,Z);
+        p.LineWidth = 1.5;
+    case '2D-surface'
+        X = SurfStruct.obj.(vars{1});
+        Y = SurfStruct.obj.(vars{2});
+        Z = SurfStruct.obj.(vars{3});
+        contourf(X,Y,Z)
+        axis equal tight
+end
 end
