@@ -621,7 +621,7 @@ end
 %% ------------------- VISUALIZE RESULTS ----------------------------------
 function visualizeResults(SurfStruct)
 type = SurfStruct.type;
-fig = figure(1);
+figure(1);
 vars = SurfStruct.varNames;
 switch type
     case '1D-profile'
