@@ -483,7 +483,8 @@ C3 = [SurfaceName SurfaceInfo];
 writeExcelResults(C,C2,C3,fullfile(dirName,fileName))
 
 % Write Surface Statistics to MATLAB file
-exportSurfStats2mat(fullfile(dirName,fileName),S,SurfAnswers,ScannerAnswers)
+exportSurfStats2mat(fullfile(dirName,fileName),S,...
+                        SurfaceName,SurfAnswers,ScannerName,ScannerAnswers)
 
 % Write Suface Data to MATLAB file
 exportSurfaceData2mat(dirName,fileName,SurfStruct)
@@ -551,17 +552,39 @@ fileName = ['SurfaceStatistics_'...
     SurfAnswers.Q7 '_'...
     SurfAnswers.Q8 '.xls'];
 end
-% -------------------------------------------------------------------------
-function exportSurfStats2mat(filename,SurfStruct,SurfAnswers,ScannerAnswers)
-Surface.Author = SurfAnswers.Q6;
-Surface.year = SurfAnswers.Q7;
+% EXPORT SURFACE STATS TO MATLAB ------------------------------------------
+function exportSurfStats2mat(filename,SurfStruct,SurfaceName,SurfAnswers,...
+                                                ScannerName,ScannerAnswers)
+% Pass Surface Questionnaire
+fields = fieldnames(SurfAnswers);
+for n=1:length(SurfaceName)
+    f = fields{n};
+    var = genvarname(SurfaceName{n});
+    Surface.(var) = SurfAnswers.(f);
+end
+%Surface.Author = SurfAnswers.Q6;
+%Surface.year = SurfAnswers.Q7;
+
+% Pass Scanner Questionnaire
+if strcmp(SurfAnswers.Q4,'Experiments')
+    fields = fieldnames(ScannerAnswers);
+    for n=1:length(ScannerName)
+        f = fields{n};
+        var = genvarname(ScannerName{n});
+        Surface.(var) = ScannerAnswers.(f);
+    end
+end
+
+% Pass Surface Statistics
 fields = fieldnames(SurfStruct);
 for n=1:length(fields)
     f = fields{n};
     Surface.(f) = SurfStruct.(f);
 end
+
 % Make MATLAB filename
 filename = [filename(1:end-4) '.mat'];
+
 % Check if file alredy exist
 if isfile(filename)
     Nf = dir([filename(1:end-4) '*' filename(end-3:end)]);
@@ -571,7 +594,8 @@ if isfile(filename)
 end
 save(filename,'Surface')
 end
-% -------------------------------------------------------------------------
+
+% EXPORT SURFACE DATA TO MATLAB -------------------------------------------
 function exportSurfaceData2mat(pathname,filename,SurfStruct)
 varNames = SurfStruct.varNames;
 N = length(varNames);
