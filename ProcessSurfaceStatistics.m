@@ -155,7 +155,6 @@ else
 end
 SurfStruct.type = type;
 end
-
 % SURFACE RELATED FUNCTIONS -----------------------------------------------
 function SurfStruct = determineXandYdir(SurfStruct)
 zname = SurfStruct.varNames{end}; % A bit of a strech assuming the
@@ -202,7 +201,6 @@ end
 SurfStruct.Lx = Lx;
 SurfStruct.Ly = Ly;
 end
-
 % SURFACE ROUGHNESS STATISTICS --------------------------------------------
 function SurfStruct = roughnessStats(SurfStruct)
 zname = SurfStruct.varNames{end};
@@ -263,7 +261,7 @@ switch SurfStruct.type
         SurfStruct.Rlz = [];
 end
 end
-% -------------------------------------------------------------------------
+% EFFECTIVE SLOPE ---------------------------------------------------------
 function Es = EffectiveSlope(X,Z,dir,L)
 if dir == 1
     dx = X(2,1) - X(1,1);
@@ -275,7 +273,7 @@ end
 dzdx = diff(Z,1,dir) ./ diff(X,1,dir);
 Es = 1/L .* mean( trapz(abs(dzdx),dir).*dx, mean_dir); % Efective Slope;
 end
-% -------------------------------------------------------------------------
+% CORRELATION LENGHTSCALE -------------------------------------------------
 function Rlx = CorrelationLenght(X,Z,dir)
 if dir == 1
     dx = X(2,1) - X(1,1);
@@ -327,7 +325,7 @@ for n=4:length(fields)
 end
 end
 
-% QUESTIONNAIRE FUNCTIONS ---------------------------------------------------
+%% ----------------- QUESTIONNAIRE FUNCTIONS ------------------------------
 function SurfAnswers = RoghnessQuestionnaire(batch)
 switch batch
     case true
@@ -434,7 +432,7 @@ else
 end
 end
 
-% EXPORT FUNCTIONS --------------------------------------------------------
+%% -------------------- EXPORT FUNCTIONS ----------------------------------
 function exportSurfaceStatistics(SurfStruct,SurfAnswers,ScannerAnswers)
 % Cleanup Struct for Excel file
 S = cleanUpStruct(SurfStruct);
