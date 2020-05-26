@@ -27,7 +27,13 @@
 %
 % Authors: Julio Barros (OIST) and Karen Flack (USNA)
 
-clc, clear
+clc, clear, close all
+
+%% PARAMETER INPUTS
+% This is useful if you are processing multiple scans/surface in which most 
+% of the answers are the same. View 'Questionnaire_Batch.txt' and
+% 'Profiler_Batch.txt' for more information.
+batch = true;
 
 %% MAIN SECTION
 % Choose file to analyze
@@ -40,13 +46,11 @@ end
 % filename = ['Processed_Surface02_8_12_25grit_CURVTILT.mat'];
 
 % Roughness and Scanner Questionare
-batch = true;
 SurfAnswers = RoghnessQuestionnaire(batch);
-ScannerAnswers = ScannerQuestionnaire(SurfAnswers);
-
+ScannerAnswers = ScannerQuestionnaire(SurfAnswers,batch);
+        
 % Run function to calculate statistics
 Surface = getSurfStatistics(fullfile(pathname,filename));
-
 % Export Surface Statistics
 exportSurfaceStatistics(Surface,SurfAnswers,ScannerAnswers)
 
@@ -327,6 +331,25 @@ switch batch
 end
 end
 % -------------------------------------------------------------------------
+function ScannerAnswers = ScannerQuestionnaire(SurfAnswers,batch)
+if strcmp(SurfAnswers.Q4,'Experiments')
+    switch batch
+        case true
+            ScannerAnswers = loadQuestionnaire('Profiler_Batch.txt');
+        otherwise
+            prompt1 = 'What is the name and model of the profiler/scanner? ';
+            prompt2 = 'What is the uncertainty in the measurement of surface heights in microns? ';
+            temp = inputdlg({prompt1,prompt2},...
+                'Scanner Information',[1 50;1 50]);
+            ScannerAnswers.Q1 = temp{1};
+            ScannerAnswers.Q2 = temp{2};       
+    end
+else
+    ScannerAnswers.Q1 = 'N/A';
+    ScannerAnswers.Q2 = 'N/A';
+end
+end
+% -------------------------------------------------------------------------
 function SurfAnswers = loadQuestionnaire(file)
 % Open the questionnaire
 fid = fopen(file,'r');
@@ -344,17 +367,6 @@ while ~feof(fid)
 end
 % Close the file
 fclose(fid);
-end
-% -------------------------------------------------------------------------
-function ScannerAnswers = ScannerQuestionnaire(SurfAnswers)
-if strcmp(SurfAnswers.Q4,'Experiments')
-    prompt1 = 'What is the name and model of the profiler/scanner? ';
-    prompt2 = 'What is the uncertainty in the measurement of surface heights in microns? ';
-    ScannerAnswers.Q1 = inputdlg({prompt1,prompt2},...
-        'Scanner Information',[1 50;1 50]);
-else
-    ScannerAnswers.Q1 = {'N/A';'N/A'};
-end
 end
 % -------------------------------------------------------------------------
 function checkAnswer(S)
