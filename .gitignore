@@ -1,13 +1,5 @@
 .DS_Store
 *.m~
 *.txt~
-*.asv
-*.csv
-*.xls
-*.xlsx
 *.mat
-*.ASC
 *.zip
-*.dat
-*.DAT
-example/*.txt
