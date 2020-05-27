@@ -489,7 +489,7 @@ exportSurfStats2mat(fullfile(dirName,fileName),S,...
 % Write Suface Data to MATLAB file
 exportSurfaceData2mat(dirName,fileName,SurfStruct)
 end
-% Write Results -----------------------------------------------------------
+% Wrapper for Saving Statistics In Excel ----------------------------------
 function writeExcelResults(C,C2,C3,pathname,filename)
 pathfile = fullfile(pathname,filename);
 if isfile(pathfile)
@@ -502,8 +502,10 @@ writeResults(C,pathname,filename);
 writeResults(C2,pathname,filename,'E1:F2')
 writeResults(C3,pathname,filename,'E4:F12')
 end
+% Excel export function ---------------------------------------------------
 function writeResults(C,pathname,filename,Range)
 if ~ispc
+    filename = fullfile(pathname,filename);
     if exist('Range','var')
         writecell(C,filename,'Range',Range);
     else
