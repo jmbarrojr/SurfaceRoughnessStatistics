@@ -480,7 +480,7 @@ C2 = [ScannerName ScannerInfo];
 C3 = [SurfaceName SurfaceInfo];
 
 % Write data to Excel spreadsheet
-writeExcelResults(C,C2,C3,fullfile(dirName,fileName))
+writeExcelResults(C,C2,C3,dirName,fileName)
 
 % Write Surface Statistics to MATLAB file
 exportSurfStats2mat(fullfile(dirName,fileName),S,...
@@ -490,18 +490,19 @@ exportSurfStats2mat(fullfile(dirName,fileName),S,...
 exportSurfaceData2mat(dirName,fileName,SurfStruct)
 end
 % Write Results -----------------------------------------------------------
-function writeExcelResults(C,C2,C3,filename)
-if isfile(filename)
-    Nf = dir([filename(1:end-4) '*' filename(end-3:end)]);
+function writeExcelResults(C,C2,C3,pathname,filename)
+pathfile = fullfile(pathname,filename);
+if isfile(pathfile)
+    Nf = dir([pathfile(1:end-4) '*' pathfile(end-3:end)]);
     N = length(Nf);
     N = N+1;
     filename = [filename(1:end-4) '(' num2str(N) ')' filename(end-3:end)];
 end
-writeResults(C,filename);
-writeResults(C2,filename,'E1:F2')
-writeResults(C3,filename,'E4:F12')
+writeResults(C,pathname,filename);
+writeResults(C2,pathname,filename,'E1:F2')
+writeResults(C3,pathname,filename,'E4:F12')
 end
-function writeResults(C,filename,Range)
+function writeResults(C,pathname,filename,Range)
 if ~ispc
     if exist('Range','var')
         writecell(C,filename,'Range',Range);
@@ -509,11 +510,15 @@ if ~ispc
         writecell(C,filename);
     end
 else
+    % This might fix a Windows issue
+    cd(pathname)
     if exist('Range','var')
-        xlswrite(C,filename,'Range',Range);
+        xlswrite('temp.xls',C,'Range',Range);
     else
-        xlswrite(C,filename);
+        xlswrite('temp.xls',C);
     end
+    % This might fix a windows issue
+    movefile('temp.xls',filename)
 end
 end
 % -------------------------------------------------------------------------
