@@ -80,12 +80,12 @@ switch ext
         %SurfStruct.varNames = who(matObj);
         SurfStruct.varProps = whos(matObj);
     % TEXT BASED FILES    
-    case {'.asc','.ASC','.dat','.csv'}
+    case {'.asc','.ASC','.dat','.DAT','.csv'}
         SurfStruct = importSurfaceTxtData(filename);
     case {'.xls','xlsx'}
         SurfStruct = importSurfaceExcel(filename);
     otherwise
-        error('Just matlab file loader implemented')
+        error('File format might not be yet implemented')
 end
 % TESTING
 % Remove non-numerical variables
