@@ -515,9 +515,9 @@ else
     % This might fix a Windows issue
     cd(pathname)
     if exist('Range','var')
-        xlswrite('temp.xls',C,'Range',Range);
+        xlswrite('temp.xls',C,'Sheet1',Range);
     else
-        xlswrite('temp.xls',C);
+        xlswrite('temp.xls',C,'Sheet1');
     end
     % This might fix a windows issue
     movefile('temp.xls',filename)
