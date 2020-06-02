@@ -500,10 +500,13 @@ if isfile(pathfile)
 end
 writeResults(C,pathname,filename);
 writeResults(C2,pathname,filename,'E1:F2')
-writeResults(C3,pathname,filename,'E4:F12')
+writeResults(C3,pathname,filename,'E4:F12',true)
 end
 % Excel export function ---------------------------------------------------
-function writeResults(C,pathname,filename,Range)
+function writeResults(C,pathname,filename,Range,flag_rename)
+if ~exist('flag_rename','var')
+    flag_rename = false;
+end
 if ~ispc
     filename = fullfile(pathname,filename);
     if exist('Range','var')
@@ -515,12 +518,16 @@ else
     % This might fix a Windows issue
     cd(pathname)
     if exist('Range','var')
-        xlswrite('temp.xls',C,'Sheet1',Range);
+        xlswrite('temp.xlsx',C,'Sheet1',Range);
+        %writecell(C,'temp.xls','Range',Range,'UseExcel',false);
     else
-        xlswrite('temp.xls',C,'Sheet1');
+        xlswrite('temp.xlsx',C,'Sheet1','A1');
+        %writecell(C,'temp.xls','UseExcel',false);
     end
     % This might fix a windows issue
-    movefile('temp.xls',filename)
+    if flag_rename == true
+        movefile('temp.xlsx',filename)
+    end
 end
 end
 % -------------------------------------------------------------------------
@@ -558,7 +565,7 @@ fileName = ['SurfaceStatistics_'...
     SurfAnswers.Q6 '_'...
     SurfAnswers.Q7 '_'...
     SurfAnswers.Q8...
-    '.xls'];
+    '.xlsx'];
 %fileName = 'SurfaceStatistics.xls';
 end
 % EXPORT SURFACE STATS TO MATLAB ------------------------------------------
