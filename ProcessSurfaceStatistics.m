@@ -59,6 +59,12 @@ exportSurfaceStatistics(Surface,SurfAnswers,ScannerAnswers)
 % Visualize Surface
 visualizeResults(Surface)
 
+% Display results on prompt
+S = cleanUpStruct(Surface);
+DataSet = struct2dataset(S); %#ok<STRUCTDTSET>
+disp('Roughness Statistics')
+disp(DataSet)
+
 %% ---------------- ROUGHNESS NESTED FUNCTIONS ---------------------------
 % MAIN FUNCTION -----------------------------------------------------------
 function Surface = getSurfStatistics(filename)
