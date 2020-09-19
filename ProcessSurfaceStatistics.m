@@ -654,11 +654,17 @@ switch type
         Z = SurfStruct.obj.(vars{2});
         p = plot(X,Z);
         p.LineWidth = 1.5;
+        xlabel('x [mm]'),ylabel('z [mm]')
+        set(gca,'FontName','Times','FontSize',12)
     case '2D-surface'
         X = SurfStruct.obj.(vars{1});
         Y = SurfStruct.obj.(vars{2});
         Z = SurfStruct.obj.(vars{3});
         contourf(X,Y,Z)
         axis equal tight
+        xlabel('x [mm]'),ylabel('y [mm]')
+        set(gca,'FontName','Times','FontSize',12)
+        c = colorbar;
+        c.Label.String = 'z [mm]';
 end
 end
