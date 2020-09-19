@@ -493,10 +493,10 @@ end
 function writeExcelResults(C,C2,C3,pathname,filename)
 pathfile = fullfile(pathname,filename);
 if isfile(pathfile)
-    Nf = dir([pathfile(1:end-4) '*' pathfile(end-3:end)]);
+    Nf = dir([pathfile(1:end-5) '*.' pathfile(end-3:end)]);
     N = length(Nf);
     N = N+1;
-    filename = [filename(1:end-4) '(' num2str(N) ')' filename(end-3:end)];
+    filename = [filename(1:end-5) '(' num2str(N) ').' filename(end-3:end)];
 end
 writeResults(C,pathname,filename);
 writeResults(C2,pathname,filename,'E1:F2')
@@ -599,14 +599,15 @@ for n=1:length(fields)
 end
 
 % Make MATLAB filename
-filename = [filename(1:end-4) '.mat'];
+ext = '.mat';
+filename = [filename(1:end-5) ext];
 
 % Check if file alredy exist
 if isfile(filename)
-    Nf = dir([filename(1:end-4) '*' filename(end-3:end)]);
+    Nf = dir([filename(1:end-4) '*' ext]);
     N = length(Nf);
     N = N + 1;
-    filename = [filename(1:end-4) '(' num2str(N) ')' filename(end-3:end)];
+    filename = [filename(1:end-4) '(' num2str(N) ')' ext];
 end
 save(filename,'Surface')
 end
@@ -622,14 +623,15 @@ end
 prt = 'Statistics'; l = length(prt);
 ind = strfind(filename,prt);
 % Make MATLAB file name
-filename = [filename(1:ind-1) 'Data' filename(ind+l:end-4) '.mat'];
+ext = '.mat';
+filename = [filename(1:ind-1) 'Data' filename(ind+l:end-5) ext];
 filename = fullfile(pathname,filename);
 % Check if file alredy exist
 if isfile(filename)
-    Nf = dir([filename(1:end-4) '*' filename(end-3:end)]);
+    Nf = dir([filename(1:end-4) '*' ext]);
     N = length(Nf);
     N = N + 1;
-    filename = [filename(1:end-4) '(' num2str(N) ')' filename(end-3:end)];
+    filename = [filename(1:end-4) '(' num2str(N) ')' ext];
 end
 save(filename,'SurfaceData')
 end
