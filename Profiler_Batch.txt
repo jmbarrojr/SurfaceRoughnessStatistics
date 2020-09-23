@@ -1,4 +1,4 @@
-# This text files help the user to aviod answering the same questions, with
+# This text files help the user to avoid answering the same questions, with
 # the same answers multiple times. This would hopefully save the user's time
 # when processing multiple surfaces.
 
