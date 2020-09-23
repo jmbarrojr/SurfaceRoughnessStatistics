@@ -1,32 +1,32 @@
-# This text files help the user to aviod answering the same questions, with
+# This text files help the user to avoid answering the same questions, with
 # the same answers multiple times. This would hopefully save the user's time
 # when processing multiple surfaces.
-# Questions from 1 to 4 are standarized and must be either options inside
+# Questions from 1 to 4 are standardised and must be either options inside
 # the bracket, so pay attention to the capitalization
 
-# 1- What kind of suface is it? [Homogeneous, Heterogeneous]
-Homogeneous
+# 1- What kind of surface is it? [Hom (Homogeneous), Het (Heterogeneous)]
+Hom
 
-# 2- Is the roughness ...? [Regular, Irregular]
-Regular
+# 2- Is the roughness ...? [Reg (Regular), Irreg (Irregular)]
+Irreg
 
 # 3- Are results for a ...? [TBL, Pipe, Channel]
 TBL
 
-# 4- Are results from ...? [Experiments, Simulations]
-Experiments
+# 4- Are results from ...? [Exp (Experiments), Sim (Simulations)]
+Exp
 
 # 5- What is the general descriptor of this surface, .i.e. 'Sandgrain'?
-Turbine Blade
+TEST
 
 # 6- What is the last name of the lead author of the study?
 Barros
 
 # 7- What year were the results published?
-2014
+2020
 
 # 8- What is the identifying name of this surface, i.e. '220Grit'?
-deposition
+DatabaseTest
 
 # 9- Include the DOI of the publication
 doi/10.11.12.13
