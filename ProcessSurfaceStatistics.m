@@ -291,8 +291,11 @@ s = size(Z,dir);
 % Compute the correlation length in the given direction
 [lags,Zcorr] = MeanAutoCorr_FFT(Z,dir);
 lags = lags.*dx;
-ind = findSlopeCorr(Zcorr);
-Rlx = interp1(Zcorr(s:s+ind),lags(s:s+ind),1./exp(1),'linear');
+% DEGUB
+% figure,plot(lags,Zcorr)
+% ind = findSlopeCorr(Zcorr);
+% Rlx = interp1(Zcorr(s:s+ind),lags(s:s+ind),1./exp(1),'linear');
+Rlx = interp1(Zcorr(s:end),lags(s:end),1./exp(1),'linear');
 end
 % -------------------------------------------------------------------------
 function [lags,C] = MeanAutoCorr_FFT(A,dir)
