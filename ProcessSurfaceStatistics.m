@@ -56,17 +56,15 @@ ScannerAnswers = ScannerQuestionnaire(SurfAnswers,batch);
         
 % Run function to calculate statistics
 Surface = getSurfStatistics(fullfile(pathname,filename));
+
 % Export Surface Statistics
 exportSurfaceStatistics(Surface,SurfAnswers,ScannerAnswers)
 
 % Visualize Surface
 visualizeResults(Surface)
 
-% Display results on prompt
-S = cleanUpStruct(Surface);
-DataSet = struct2dataset(S); %#ok<STRUCTDTSET>
-disp('Roughness Statistics')
-disp(DataSet)
+% Display results on command prompt
+displayResults(Surface)
 
 %% ---------------- ROUGHNESS NESTED FUNCTIONS ---------------------------
 % MAIN FUNCTION -----------------------------------------------------------
@@ -670,4 +668,11 @@ switch type
         c = colorbar;
         c.Label.String = 'z [mm]';
 end
+end
+% -------------------------------------------------------------------------
+function displayResults(SurfStruct)
+S = cleanUpStruct(SurfStruct);
+DataSet = struct2dataset(S); %#ok<STRUCTDTSET>
+disp('Roughness Statistics')
+disp(DataSet)
 end
