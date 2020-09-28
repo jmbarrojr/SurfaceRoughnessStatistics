@@ -314,7 +314,9 @@ if S(1) > 1 || S(2) > 1
     end
 end
 C = C ./ max(C(:)); % Normalize the correlation
-lags = [linspace(-(s-1),1,s-1) 0 linspace(1,s-1,s-1)];
+lags = [-linspace(s-1,1,s-1) 0 linspace(1,s-1,s-1)];
+% DEGUB
+% figure,plot(C),title('AutoCorr')
 end
 % -------------------------------------------------------------------------
 function ind = findSlopeCorr(C)
