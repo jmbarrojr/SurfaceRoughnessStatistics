@@ -1,4 +1,4 @@
-# This text files help the user to aviod answering the same questions, with
+# This text files help the user to avoid answering the same questions, with
 # the same answers multiple times. This would hopefully save the user's time
 # when processing multiple surfaces.
 
@@ -7,3 +7,6 @@ ProtoScan 1
 
 # 2- What is the uncertainty in the measurement of surface heights in microns?
 12
+
+# 3- What is the unit of measurements of the scan(file), e.g. mm (milimeters), um (microns), in(inches)?
+mm

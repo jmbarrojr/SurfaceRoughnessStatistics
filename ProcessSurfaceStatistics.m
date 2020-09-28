@@ -3,29 +3,32 @@
 %
 % The development idea of this script is to require minimum users
 % interface when running the code. In other words, there is no need for
-% code manipulation or changes to fully export the roughness statistics.
+% code manipulation or changes to correctly export the roughness statistics.
 %
-% Two type of surfaces are supported: 1D line profiles, or 3D surface
+% Two type of surfaces are supported: 1D-line profiles, or 2D-surface
 % scans.
 %
-% However, we ask the user to comply with the standard set of the input
-% file containing the roughness height information. The input formart
-% supported are MATLAB (*.mat), Excel (*.xls) and ASCII (*.csv or
-% tab-delimeted *.txt, or *.dat).
+% The input format supported are MATLAB (*.mat), Excel (*.xls) and 
+% ASCII (*.csv or tab-delimited *.txt, or *.dat).
 %
-% For MATLAB files, put the roughness infomation in data into variables
+% We however ask the users to comply with the standards set for the input
+% files containing the roughness height information.
+%
+% For MATLAB files, put the roughness information in data into variables
 % X,Y,Z and use the save(...) function to save the roughness information.
 %
-% For ASCII files, the X,Y,Z information should be format in each column.
+% For ASCII/CSV files, the X,Y,Z information should be format in each column.
 %
 % The supporting functions are nested in the bottom of this script.
-% Changing them may like break the code. If a bug was detected, either
-% open an issue github at https://github.com/jmbarrojr/SurfaceRoughnessStatistics/issues
+% Changing them may likely break the code and/or calculations.
+%
+% If a bug is detected, either open an issue on github at 
+% https://github.com/jmbarrojr/SurfaceRoughnessStatistics/issues
 % or send an email to julio.barros@gmail.com using "[BUG]" prefix in the
 % email's subject.
 %
 %
-% Authors: Julio Barros (OIST) and Karen Flack (USNA)
+% Authors: Julio Barros (OIST) and Karen Flack (USNA) - 2020
 
 clc, clear, close all
 
@@ -53,11 +56,15 @@ ScannerAnswers = ScannerQuestionnaire(SurfAnswers,batch);
         
 % Run function to calculate statistics
 Surface = getSurfStatistics(fullfile(pathname,filename));
+
 % Export Surface Statistics
 exportSurfaceStatistics(Surface,SurfAnswers,ScannerAnswers)
 
 % Visualize Surface
 visualizeResults(Surface)
+
+% Display results on command prompt
+displayResults(Surface)
 
 %% ---------------- ROUGHNESS NESTED FUNCTIONS ---------------------------
 % MAIN FUNCTION -----------------------------------------------------------
@@ -216,28 +223,28 @@ SurfStruct.kmin = kmin;
 kmax = max(z(:));
 SurfStruct.kmax = kmax;
 
-% Peak-to-trough roughness height
-SurfStruct.kp = kmax - kmin;
+% Peak-to-trough roughness height (kt)
+SurfStruct.kt = kmax - kmin;
 
-% Peak-to-trough roughness height average 5
+% Peak-to-trough roughness height average 5 (kz5)
 MaxZ = sortrows(z(:),'descend');
 MinZ = sortrows(z(:),'ascend');
-SurfStruct.kp5 = mean(MaxZ(1:5)) - mean(MinZ(1:5));
+SurfStruct.kz5 = mean(MaxZ(1:5)) - mean(MinZ(1:5));
 
-% Average roughness height over entire surface
+% Mean roughness elevation
 SurfStruct.kbar = mean(z(:));
 
-% Root-mean-square of the height
+% Average roughness heigth
 SurfStruct.ka = mean(abs(z(:)));
 
-% Remove mean height
-SurfStruct.krms = rms(z(:));
+% Root-mean-square of the height
+SurfStruct.krms_z = rms(z(:));
 
-% Average roughness height
+% Average roughness height (h')
 z = z - mean(z(:));
 
-% Root-mean-square of the height with mean height removed
-SurfStruct.krmsp = rms(z(:));
+% Root-mean-square of the height with mean height removed (krms)
+SurfStruct.krms = rms(z(:));
 
 % Skewness of the roughness height fluctuation
 SurfStruct.Sk = skewness(z(:));
@@ -248,17 +255,17 @@ SurfStruct.Fl = kurtosis(z(:));
 % Effective slope and correlation length
 xname = SurfStruct.varNames{1};
 x = SurfStruct.obj.(xname);
-SurfStruct.Esx = EffectiveSlope(x,z,SurfStruct.Xdir,SurfStruct.Lx);
+SurfStruct.ESx = EffectiveSlope(x,z,SurfStruct.Xdir,SurfStruct.Lx);
 SurfStruct.Rlx = CorrelationLenght(x,z,SurfStruct.Xdir);
 switch SurfStruct.type
     case '2D-surface'
         yname = SurfStruct.varNames{2};
         y = SurfStruct.obj.(yname);
-        SurfStruct.Esy = EffectiveSlope(y,z,SurfStruct.Ydir,SurfStruct.Ly);
-        SurfStruct.Rlz = CorrelationLenght(y,z,SurfStruct.Ydir);
+        SurfStruct.ESy = EffectiveSlope(y,z,SurfStruct.Ydir,SurfStruct.Ly);
+        SurfStruct.Rly = CorrelationLenght(y,z,SurfStruct.Ydir);
     otherwise
-        SurfStruct.Esy = [];
-        SurfStruct.Rlz = [];
+        SurfStruct.ESy = [];
+        SurfStruct.Rly = [];
 end
 end
 % EFFECTIVE SLOPE ---------------------------------------------------------
@@ -281,22 +288,25 @@ else
     dx = X(1,2) - X(1,1);
 end
 s = size(Z,dir);
-% Compute the correlation length in the Y-dir
+% Compute the correlation length in the given direction
 [lags,Zcorr] = MeanAutoCorr_FFT(Z,dir);
 lags = lags.*dx;
-ind = findSlopeCorr(Zcorr);
-Rlx = interp1(Zcorr(s:s+ind),lags(s:s+ind),1./exp(1),'linear');
+% DEGUB
+% figure,plot(lags,Zcorr)
+% ind = findSlopeCorr(Zcorr);
+% Rlx = interp1(Zcorr(s:s+ind),lags(s:s+ind),1./exp(1),'linear');
+Rlx = interp1(Zcorr(s:end),lags(s:end),1./exp(1),'linear');
 end
 % -------------------------------------------------------------------------
 function [lags,C] = MeanAutoCorr_FFT(A,dir)
 S = size(A);
 s = S(dir);                      % Get the size of A in the desired direction
-nfft = 2*s-1;                    % Make the FFT size to be 2*s-1 to make the center as 0
+nfft = 2*s-1;                    % Make the FFT size to be 2*s-1 to have lag=0 at the center
 A = A - mean(A(:));              % Remove any mean in the surface
 Afft = fft(A,nfft,dir);          % Compute the FFT of A
-Afft = Afft ./s;                 % To unbiase the correlation
+Afft = Afft ./s;                 % To unbiased the correlation magnitude
 C = Afft .* conj(Afft);          % Compute the correlation via FFT
-C = fftshift(ifft(C,[],dir),dir);% Make the zero lag in the center
+C = fftshift(ifft(C,[],dir),dir);% Make the zero lag at the center
 
 % Ensemble average only if it's a 2d surface
 if S(1) > 1 || S(2) > 1
@@ -307,7 +317,9 @@ if S(1) > 1 || S(2) > 1
     end
 end
 C = C ./ max(C(:)); % Normalize the correlation
-lags = [linspace(-(s-1),1,s-1) 0 linspace(1,s-1,s-1)];
+lags = [-linspace(s-1,1,s-1) 0 linspace(1,s-1,s-1)];
+% DEGUB
+% figure,plot(C),title('AutoCorr')
 end
 % -------------------------------------------------------------------------
 function ind = findSlopeCorr(C)
@@ -333,14 +345,14 @@ switch batch
     otherwise
         % Get information to name the Excel output file and directory
         % Surface information
-        prompt = 'What kind of suface is it? ';
-        q1 = 'Homogeneous'; q2 = 'Heterogeneous';
+        prompt = 'Is the surface Homogeneous or Heterogeneous? ';
+        q1 = 'Hom'; q2 = 'Het';
         SurfAnswers.Q1 = questdlg(prompt,'Roughness Information',...
             q1,q2,q1);
         checkAnswer(SurfAnswers.Q1);
         
-        prompt = 'Is the roughness ...';
-        q1 = 'Regular'; q2 = 'Irregular';
+        prompt = 'Is the roughness Regular or Irregular?';
+        q1 = 'Reg'; q2 = 'Irreg';
         SurfAnswers.Q2 = questdlg(prompt,'Roughness Information',...
             q1, q2, q1);
         checkAnswer(SurfAnswers.Q2);
@@ -351,8 +363,8 @@ switch batch
             q1, q2, q3, q1);
         checkAnswer(SurfAnswers.Q3);
         
-        prompt = 'Are results from ...';
-        q1 = 'Experiments'; q2 = 'Simulations';
+        prompt = 'Are results from Experiments or Simulations?';
+        q1 = 'Exp'; q2 = 'Sim';
         SurfAnswers.Q4 = questdlg(prompt,'Roughness Information',...
             q1,q2,q1);
         checkAnswer(SurfAnswers.Q4);
@@ -381,21 +393,25 @@ end
 end
 % -------------------------------------------------------------------------
 function ScannerAnswers = ScannerQuestionnaire(SurfAnswers,batch)
-if strcmp(SurfAnswers.Q4,'Experiments')
+if strcmp(SurfAnswers.Q4,'Exp')
     switch batch
         case true
             ScannerAnswers = loadQuestionnaire('Profiler_Batch.txt');
         otherwise
             prompt1 = 'What is the name and model of the profiler/scanner? ';
             prompt2 = 'What is the uncertainty in the measurement of surface heights in microns? ';
-            temp = inputdlg({prompt1,prompt2},...
-                'Scanner Information',[1 50;1 50]);
+            prompt3 = ['What is the unit of measurements of the scan(file),'...
+                      'e.g. mm (milimeters), um (microns), in(inches)? '];
+            temp = inputdlg({prompt1,prompt2,prompt3},...
+                'Scanner Information',[1 50;1 50;1 50]);
             ScannerAnswers.Q1 = temp{1};
-            ScannerAnswers.Q2 = temp{2};       
+            ScannerAnswers.Q2 = temp{2};
+            ScannerAnswers.Q3 = temp{3};
     end
 else
     ScannerAnswers.Q1 = 'N/A';
     ScannerAnswers.Q2 = 'N/A';
+    ScannerAnswers.Q3 = 'N/A';
 end
 end
 % -------------------------------------------------------------------------
@@ -448,8 +464,9 @@ Fields = Fields(4:end);
 [dirName,fileName] = SurfAnswers2filename(SurfAnswers);
 
 % Prepare Scanner information
-ScannerName = {'Scanner name and model';'Scanner uncertainty (microns)'};
-ScannerInfo = {ScannerAnswers.Q1;ScannerAnswers.Q2};
+ScannerName = {'Scanner name and model';'Scanner uncertainty (microns)';
+               'Unit of scan file/statistics'};
+ScannerInfo = {ScannerAnswers.Q1;ScannerAnswers.Q2;ScannerAnswers.Q3};
 
 % Prepare Surface information
 SurfaceName = {'Kind';'Type';'Flow Type';'Results';'Descriptor';'Author';...
@@ -457,20 +474,20 @@ SurfaceName = {'Kind';'Type';'Flow Type';'Results';'Descriptor';'Author';...
 SurfaceInfo = {SurfAnswers.Q1;SurfAnswers.Q2;SurfAnswers.Q3;SurfAnswers.Q4;...
 SurfAnswers.Q5;SurfAnswers.Q6;SurfAnswers.Q7;SurfAnswers.Q8;SurfAnswers.Q9};
 
-varNames = {'Streamwise length of scan (mm)';
-            'Spanwise length of scan (mm)';
-            'Minimum roughness height (mm)';
-            'Maximum roughness height (mm)';
-            'Peak-to-trough roughness height (mm)';
-            'Average 5 peak-to-trough roughness height (mm)';
-            'Average roughness height (mm)';
-            'Average of absolute value of the height fluctuations (mm)';
-            'Root-mean-square of the total height (mm)';
-            'Root-mean-square of the height fluctuations (mm)';
+varNames = {'Streamwise length of scan';
+            'Spanwise length of scan';
+            'Minimum roughness height';
+            'Maximum roughness height';
+            'Peak-to-trough roughness height';
+            'Average 5 peak-to-trough roughness height';
+            'Average roughness height';
+            'Average of absolute value of the height fluctuations';
+            'Root-mean-square of the total height';
+            'Root-mean-square of the height fluctuations';
             'Skewness of the height fluctuations';
             'Flatness of the height fluctuations';
-            'Effective Slope in the steamwise direction';
-            'Correlation length in the steamwise direction';
+            'Effective Slope in the streamwise direction';
+            'Correlation length in the streamwise direction';
             'Effective Slope in the spanwise direction';
             'Correlation length in the spanwise direction';};
 
@@ -493,17 +510,20 @@ end
 function writeExcelResults(C,C2,C3,pathname,filename)
 pathfile = fullfile(pathname,filename);
 if isfile(pathfile)
-    Nf = dir([pathfile(1:end-4) '*' pathfile(end-3:end)]);
+    Nf = dir([pathfile(1:end-5) '*.' pathfile(end-3:end)]);
     N = length(Nf);
     N = N+1;
-    filename = [filename(1:end-4) '(' num2str(N) ')' filename(end-3:end)];
+    filename = [filename(1:end-5) '(' num2str(N) ').' filename(end-3:end)];
 end
 writeResults(C,pathname,filename);
-writeResults(C2,pathname,filename,'E1:F2')
-writeResults(C3,pathname,filename,'E4:F12')
+writeResults(C2,pathname,filename,'E1:F3')
+writeResults(C3,pathname,filename,'E5:F13',true)
 end
 % Excel export function ---------------------------------------------------
-function writeResults(C,pathname,filename,Range)
+function writeResults(C,pathname,filename,Range,flag_rename)
+if ~exist('flag_rename','var')
+    flag_rename = false;
+end
 if ~ispc
     filename = fullfile(pathname,filename);
     if exist('Range','var')
@@ -515,24 +535,27 @@ else
     % This might fix a Windows issue
     cd(pathname)
     if exist('Range','var')
-        xlswrite('temp.xls',C,'Sheet1',Range);
+        xlswrite('temp.xlsx',C,'Sheet1',Range);
+        %writecell(C,'temp.xls','Range',Range,'UseExcel',false);
     else
-        xlswrite('temp.xls',C,'Sheet1');
+        xlswrite('temp.xlsx',C,'Sheet1','A1');
+        %writecell(C,'temp.xls','UseExcel',false);
     end
     % This might fix a windows issue
-    movefile('temp.xls',filename)
+    if flag_rename == true
+        movefile('temp.xlsx',filename)
+    end
 end
 end
 % -------------------------------------------------------------------------
 function [dirName,fileName] = SurfAnswers2filename(SurfAnswers)
 pattern = [SurfAnswers.Q1 '_'...
-    SurfAnswers.Q2 '_'...
-    SurfAnswers.Q3 '_'...
-    SurfAnswers.Q4 '_'...
-    SurfAnswers.Q5 '_'...
-    SurfAnswers.Q6 '_'...
-    SurfAnswers.Q7 '_'...
-    SurfAnswers.Q8];
+           SurfAnswers.Q2 '_'...
+           SurfAnswers.Q3 '_'...
+           SurfAnswers.Q4 '_'...
+           SurfAnswers.Q5 '_'...
+           SurfAnswers.Q6 '_'...
+           SurfAnswers.Q7];
 
 % Make the directory structure
 folders = {'Surfaces','Flow documentation','Paper'};
@@ -558,7 +581,7 @@ fileName = ['SurfaceStatistics_'...
     SurfAnswers.Q6 '_'...
     SurfAnswers.Q7 '_'...
     SurfAnswers.Q8...
-    '.xls'];
+    '.xlsx'];
 %fileName = 'SurfaceStatistics.xls';
 end
 % EXPORT SURFACE STATS TO MATLAB ------------------------------------------
@@ -592,14 +615,15 @@ for n=1:length(fields)
 end
 
 % Make MATLAB filename
-filename = [filename(1:end-4) '.mat'];
+ext = '.mat';
+filename = [filename(1:end-5) ext];
 
 % Check if file alredy exist
 if isfile(filename)
-    Nf = dir([filename(1:end-4) '*' filename(end-3:end)]);
+    Nf = dir([filename(1:end-4) '*' ext]);
     N = length(Nf);
     N = N + 1;
-    filename = [filename(1:end-4) '(' num2str(N) ')' filename(end-3:end)];
+    filename = [filename(1:end-4) '(' num2str(N) ')' ext];
 end
 save(filename,'Surface')
 end
@@ -615,14 +639,15 @@ end
 prt = 'Statistics'; l = length(prt);
 ind = strfind(filename,prt);
 % Make MATLAB file name
-filename = [filename(1:ind-1) 'Data' filename(ind+l:end-4) '.mat'];
+ext = '.mat';
+filename = [filename(1:ind-1) 'Data' filename(ind+l:end-5) ext];
 filename = fullfile(pathname,filename);
 % Check if file alredy exist
 if isfile(filename)
-    Nf = dir([filename(1:end-4) '*' filename(end-3:end)]);
+    Nf = dir([filename(1:end-4) '*' ext]);
     N = length(Nf);
     N = N + 1;
-    filename = [filename(1:end-4) '(' num2str(N) ')' filename(end-3:end)];
+    filename = [filename(1:end-4) '(' num2str(N) ')' ext];
 end
 save(filename,'SurfaceData')
 end
@@ -639,11 +664,24 @@ switch type
         Z = SurfStruct.obj.(vars{2});
         p = plot(X,Z);
         p.LineWidth = 1.5;
+        xlabel('x [mm]'),ylabel('z [mm]')
+        set(gca,'FontName','Times','FontSize',12)
     case '2D-surface'
         X = SurfStruct.obj.(vars{1});
         Y = SurfStruct.obj.(vars{2});
         Z = SurfStruct.obj.(vars{3});
         contourf(X,Y,Z)
         axis equal tight
+        xlabel('x [mm]'),ylabel('y [mm]')
+        set(gca,'FontName','Times','FontSize',12)
+        c = colorbar;
+        c.Label.String = 'z [mm]';
 end
+end
+% -------------------------------------------------------------------------
+function displayResults(SurfStruct)
+S = cleanUpStruct(SurfStruct);
+DataSet = struct2dataset(S); %#ok<STRUCTDTSET>
+disp('Roughness Statistics')
+disp(DataSet)
 end
