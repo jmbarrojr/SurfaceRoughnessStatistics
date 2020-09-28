@@ -393,21 +393,25 @@ end
 end
 % -------------------------------------------------------------------------
 function ScannerAnswers = ScannerQuestionnaire(SurfAnswers,batch)
-if strcmp(SurfAnswers.Q4,'Experiments')
+if strcmp(SurfAnswers.Q4,'Exp')
     switch batch
         case true
             ScannerAnswers = loadQuestionnaire('Profiler_Batch.txt');
         otherwise
             prompt1 = 'What is the name and model of the profiler/scanner? ';
             prompt2 = 'What is the uncertainty in the measurement of surface heights in microns? ';
-            temp = inputdlg({prompt1,prompt2},...
-                'Scanner Information',[1 50;1 50]);
+            prompt3 = ['What is the unit of measurements of the scan(file),'...
+                      'e.g. mm (milimeters), um (microns), in(inches)? '];
+            temp = inputdlg({prompt1,prompt2,prompt3},...
+                'Scanner Information',[1 50;1 50;1 50]);
             ScannerAnswers.Q1 = temp{1};
-            ScannerAnswers.Q2 = temp{2};       
+            ScannerAnswers.Q2 = temp{2};
+            ScannerAnswers.Q3 = temp{3};
     end
 else
     ScannerAnswers.Q1 = 'N/A';
     ScannerAnswers.Q2 = 'N/A';
+    ScannerAnswers.Q3 = 'N/A';
 end
 end
 % -------------------------------------------------------------------------
@@ -460,8 +464,9 @@ Fields = Fields(4:end);
 [dirName,fileName] = SurfAnswers2filename(SurfAnswers);
 
 % Prepare Scanner information
-ScannerName = {'Scanner name and model';'Scanner uncertainty (microns)'};
-ScannerInfo = {ScannerAnswers.Q1;ScannerAnswers.Q2};
+ScannerName = {'Scanner name and model';'Scanner uncertainty (microns)';
+               'Unit of scan file/statistics'};
+ScannerInfo = {ScannerAnswers.Q1;ScannerAnswers.Q2;ScannerAnswers.Q3};
 
 % Prepare Surface information
 SurfaceName = {'Kind';'Type';'Flow Type';'Results';'Descriptor';'Author';...
@@ -511,8 +516,8 @@ if isfile(pathfile)
     filename = [filename(1:end-5) '(' num2str(N) ').' filename(end-3:end)];
 end
 writeResults(C,pathname,filename);
-writeResults(C2,pathname,filename,'E1:F2')
-writeResults(C3,pathname,filename,'E4:F12',true)
+writeResults(C2,pathname,filename,'E1:F3')
+writeResults(C3,pathname,filename,'E5:F13',true)
 end
 % Excel export function ---------------------------------------------------
 function writeResults(C,pathname,filename,Range,flag_rename)
