@@ -223,28 +223,28 @@ SurfStruct.kmin = kmin;
 kmax = max(z(:));
 SurfStruct.kmax = kmax;
 
-% Peak-to-trough roughness height
-SurfStruct.kp = kmax - kmin;
+% Peak-to-trough roughness height (kt)
+SurfStruct.kt = kmax - kmin;
 
-% Peak-to-trough roughness height average 5
+% Peak-to-trough roughness height average 5 (kz5)
 MaxZ = sortrows(z(:),'descend');
 MinZ = sortrows(z(:),'ascend');
-SurfStruct.kp5 = mean(MaxZ(1:5)) - mean(MinZ(1:5));
+SurfStruct.kz5 = mean(MaxZ(1:5)) - mean(MinZ(1:5));
 
-% Average roughness height over entire surface
+% Mean roughness elevation
 SurfStruct.kbar = mean(z(:));
 
-% Root-mean-square of the height
+% Average roughness heigth
 SurfStruct.ka = mean(abs(z(:)));
 
-% Remove mean height
-SurfStruct.krms = rms(z(:));
+% Root-mean-square of the height
+SurfStruct.krms_z = rms(z(:));
 
-% Average roughness height
+% Average roughness height (h')
 z = z - mean(z(:));
 
-% Root-mean-square of the height with mean height removed
-SurfStruct.krmsp = rms(z(:));
+% Root-mean-square of the height with mean height removed (krms)
+SurfStruct.krms = rms(z(:));
 
 % Skewness of the roughness height fluctuation
 SurfStruct.Sk = skewness(z(:));
@@ -255,17 +255,17 @@ SurfStruct.Fl = kurtosis(z(:));
 % Effective slope and correlation length
 xname = SurfStruct.varNames{1};
 x = SurfStruct.obj.(xname);
-SurfStruct.Esx = EffectiveSlope(x,z,SurfStruct.Xdir,SurfStruct.Lx);
+SurfStruct.ESx = EffectiveSlope(x,z,SurfStruct.Xdir,SurfStruct.Lx);
 SurfStruct.Rlx = CorrelationLenght(x,z,SurfStruct.Xdir);
 switch SurfStruct.type
     case '2D-surface'
         yname = SurfStruct.varNames{2};
         y = SurfStruct.obj.(yname);
-        SurfStruct.Esy = EffectiveSlope(y,z,SurfStruct.Ydir,SurfStruct.Ly);
-        SurfStruct.Rlz = CorrelationLenght(y,z,SurfStruct.Ydir);
+        SurfStruct.ESy = EffectiveSlope(y,z,SurfStruct.Ydir,SurfStruct.Ly);
+        SurfStruct.Rly = CorrelationLenght(y,z,SurfStruct.Ydir);
     otherwise
-        SurfStruct.Esy = [];
-        SurfStruct.Rlz = [];
+        SurfStruct.ESy = [];
+        SurfStruct.Rly = [];
 end
 end
 % EFFECTIVE SLOPE ---------------------------------------------------------
