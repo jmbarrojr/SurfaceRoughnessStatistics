@@ -345,14 +345,14 @@ switch batch
     otherwise
         % Get information to name the Excel output file and directory
         % Surface information
-        prompt = 'What kind of suface is it? ';
-        q1 = 'Homogeneous'; q2 = 'Heterogeneous';
+        prompt = 'Is the surface Homogeneous or Heterogeneous? ';
+        q1 = 'Hom'; q2 = 'Het';
         SurfAnswers.Q1 = questdlg(prompt,'Roughness Information',...
             q1,q2,q1);
         checkAnswer(SurfAnswers.Q1);
         
-        prompt = 'Is the roughness ...';
-        q1 = 'Regular'; q2 = 'Irregular';
+        prompt = 'Is the roughness Regular or Irregular?';
+        q1 = 'Reg'; q2 = 'Irreg';
         SurfAnswers.Q2 = questdlg(prompt,'Roughness Information',...
             q1, q2, q1);
         checkAnswer(SurfAnswers.Q2);
@@ -363,8 +363,8 @@ switch batch
             q1, q2, q3, q1);
         checkAnswer(SurfAnswers.Q3);
         
-        prompt = 'Are results from ...';
-        q1 = 'Experiments'; q2 = 'Simulations';
+        prompt = 'Are results from Experiments or Simulations?';
+        q1 = 'Exp'; q2 = 'Sim';
         SurfAnswers.Q4 = questdlg(prompt,'Roughness Information',...
             q1,q2,q1);
         checkAnswer(SurfAnswers.Q4);
