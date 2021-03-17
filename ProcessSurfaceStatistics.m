@@ -292,10 +292,11 @@ s = size(Z,dir);
 [lags,Zcorr] = MeanAutoCorr_FFT(Z,dir);
 lags = lags.*dx;
 % DEGUB
-% figure,plot(lags,Zcorr)
-% ind = findSlopeCorr(Zcorr);
-% Rlx = interp1(Zcorr(s:s+ind),lags(s:s+ind),1./exp(1),'linear');
-Rlx = interp1(Zcorr(s:end),lags(s:end),1./exp(1),'linear');
+%figure,plot(lags,Zcorr)
+ind = findSlopeCorr(Zcorr);
+%figure,plot(Zcorr(s:s+ind-1),lags(s:s+ind-1),Zcorr(s+ind-1),lags(s+ind-1),'ro')
+Rlx = interp1(Zcorr(s:s+ind-1),lags(s:s+ind-1),1./exp(1),'linear');
+% Rlx = interp1(Zcorr(s:end),lags(s:end),1./exp(1),'linear');
 end
 % -------------------------------------------------------------------------
 function [lags,C] = MeanAutoCorr_FFT(A,dir)
@@ -322,10 +323,13 @@ lags = [-linspace(s-1,1,s-1) 0 linspace(1,s-1,s-1)];
 % figure,plot(C),title('AutoCorr')
 end
 % -------------------------------------------------------------------------
-function ind = findSlopeCorr(C)
+function ind = findSlopeCorr(C) % Find minimum point
 l = length(C);
+%figure,plot(C),hold on
 C = C((l+1)/2:end); % Get only half of C
-ind = find(diff(C) > 0,1);
+%plot(256:1:l,C),hold off
+%ind = find(diff(C) > 0,1);
+ind = find(C-min(C) == 0,1,'first');
 end
 % -------------------------------------------------------------------------
 function S = cleanUpStruct(SurfStruct)
@@ -681,7 +685,7 @@ end
 % -------------------------------------------------------------------------
 function displayResults(SurfStruct)
 S = cleanUpStruct(SurfStruct);
-DataSet = struct2dataset(S); %#ok<STRUCTDTSET>
+DataSet = struct2table(S,'AsArray',true);
 disp('Roughness Statistics')
 disp(DataSet)
 end
