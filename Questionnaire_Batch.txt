@@ -1,8 +1,8 @@
-# This text files help the user to avoid answering the same questions, with
-# the same answers multiple times. This would hopefully save the user's time
+# This text file helps the user to avoid answering the same questions with
+# the same answers multiple times. This will hopefully save the user's time
 # when processing multiple surfaces.
-# Questions from 1 to 4 are standardised and must be either options inside
-# the bracket, so pay attention to the capitalization
+# Questions from 1 to 4 are standardized and must be answered with one of the
+# options inside the brackets, so pay attention to the capitalization.
 
 # 1- What kind of surface is it? [Hom (Homogeneous), Het (Heterogeneous)]
 Hom
@@ -16,7 +16,7 @@ TBL
 # 4- Are results from ...? [Exp (Experiments), Sim (Simulations)]
 Exp
 
-# 5- What is the general descriptor of this surface, .i.e. 'Sandgrain'?
+# 5- What is the general descriptor of this surface, i.e. 'Sandgrain'?
 TEST
 
 # 6- What is the last name of the lead author of the study?
