@@ -73,7 +73,7 @@ For MATLAB files, put the roughness information into variables X, Y, Z and use t
 
 For ASCII/CSV files, the X, Y, Z information should be formatted in each column.
 
-The supporting functions are nested at the bottom of this script. Changing them may likely break the code and/or calculations.
+The supporting functions are packed as a MATLAB class in a separate file. Changing them may likely break the code and/or calculations.
 
 If a bug is detected, either open an issue on GitHub at 
 https://github.com/jmbarrojr/SurfaceRoughnessStatistics/issues or send an email to julio.barros@gmail.com using "[BUG]" prefix in the email's subject.
