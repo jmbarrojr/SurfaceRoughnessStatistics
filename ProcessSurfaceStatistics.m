@@ -1,28 +1,28 @@
 % This script processes surface roughness statistics to support the
 % roughness database hosted by the University of Southampton.
 %
-% The development idea of this script is to require minimum users
+% The development idea of this script is to require minimum user
 % interface when running the code. In other words, there is no need for
 % code manipulation or changes to correctly export the roughness statistics.
 %
-% Two type of surfaces are supported: 1D-line profiles, or 2D-surface
+% Two types of surfaces are supported: 1D-line profiles, or 2D-surface
 % scans.
 %
-% The input format supported are MATLAB (*.mat), Excel (*.xls) and 
+% The input formats supported are MATLAB (*.mat), Excel (*.xls) and 
 % ASCII (*.csv or tab-delimited *.txt, or *.dat).
 %
 % We however ask the users to comply with the standards set for the input
 % files containing the roughness height information.
 %
 % For MATLAB files, put the roughness information in data into variables
-% X,Y,Z and use the save(...) function to save the roughness information.
+% X, Y, Z and use the save(...) function to save the roughness information.
 %
-% For ASCII/CSV files, the X,Y,Z information should be format in each column.
+% For ASCII/CSV files, the X, Y, Z information should be formatted in each column.
 %
-% The supporting functions are nested in the bottom of this script.
-% Changing them may likely break the code and/or calculations.
+% The supporting functions are nested as a MATLAB class in a separated files.
+% Changing these function may likely break the code and/or calculations.
 %
-% If a bug is detected, either open an issue on github at 
+% If a bug is detected, either open an issue on GitHub at 
 % https://github.com/jmbarrojr/SurfaceRoughnessStatistics/issues
 % or send an email to julio.barros@gmail.com using "[BUG]" prefix in the
 % email's subject.
@@ -33,7 +33,7 @@
 clc, clear, close all
 
 %% PARAMETER INPUTS
-% This is useful if you are processing multiple scans/surface in which most 
+% This is useful if you are processing multiple scans/surfaces in which most 
 % of the answers are the same. View 'Questionnaire_Batch.txt' and
 % 'Profiler_Batch.txt' for more information.
 batch = true;
@@ -47,10 +47,10 @@ batch = true;
 if isempty(filename) == 1 || ~ischar(filename)
     error('No file was selected')
 end
-% Or  paste in the file
+% Or paste in the file
 % filename = ['Processed_Surface02_8_12_25grit_CURVTILT.mat'];
 
-% Roughness and Scanner Questionare
+% Roughness and Scanner Questionnaire
 SurfAnswers = SurfaceRoughnessProcessor.RoughnessQuestionnaire(batch);
 ScannerAnswers = SurfaceRoughnessProcessor.ScannerQuestionnaire(SurfAnswers, batch);
         
