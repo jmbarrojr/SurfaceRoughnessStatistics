@@ -7,74 +7,60 @@ classdef SurfaceRoughnessProcessor
             Surface = SurfaceRoughnessProcessor.roughPhysicalProp(Surface);
             Surface = SurfaceRoughnessProcessor.roughnessStats(Surface);
         end
-        
+
         function SurfStruct = loadSurface(filename)
-            ext = filename(end-3:end);
-            switch ext
+            [~, ~, ext] = fileparts(filename);
+            switch lower(ext)
                 case '.mat'
                     matObj = matfile(filename, 'Writable', false);
                     SurfStruct.obj = matObj;
                     SurfStruct.varProps = whos(matObj);
-                case {'.asc','.ASC','.dat','.DAT','.csv'}
+                    varNames = {};
+                    for n = 1:length(SurfStruct.varProps)
+                        if strcmp(SurfStruct.varProps(n).class, 'double')
+                            varNames{end+1} = SurfStruct.varProps(n).name; %#ok<AGROW>
+                        end
+                    end
+                    SurfStruct.varNames = varNames;
+                case {'.asc', '.dat', '.csv'}
                     SurfStruct = SurfaceRoughnessProcessor.importSurfaceTxtData(filename);
-                case {'.xls','xlsx'}
+                case {'.xls', '.xlsx'}
                     SurfStruct = SurfaceRoughnessProcessor.importSurfaceExcel(filename);
                 otherwise
-                    error('File format might not be yet implemented')
+                    error('File format not yet implemented: %s', ext)
             end
-            N = length(SurfStruct.varProps);
-            c = 1;
-            for n = 1:N
-                cls = SurfStruct.varProps(n).class;
-                name = SurfStruct.varProps(n).name;
-                if strcmp(cls, 'double')
-                    varNames{c} = name; %#ok<AGROW>
-                    c = c + 1;
-                end
-            end
-            SurfStruct.varNames = varNames;
         end
-        
+
         function SurfStruct = importSurfaceTxtData(filename)
-            A = importdata(filename);
-            L = size(A, 2);
-            if L == 2
-                X = A(:, 1);
-                Z = A(:, 2);
-                save('temp.mat', 'X', 'Z')
-            elseif L == 3
-                A = sortrows(A, [1, 2]);
-                J = find(A(1, 1) - A(:, 1) == 0, 1, 'last');
-                A = sortrows(A, [2, 1]);
-                I = find(A(1, 2) - A(:, 2) == 0, 1, 'last');
-                X = reshape(A(:, 1), I, J)';
-                Y = reshape(A(:, 2), I, J)';
-                Z = reshape(A(:, 3), I, J)';
-                save('temp.mat', 'X', 'Y', 'Z')
-            end
-            SurfStruct = SurfaceRoughnessProcessor.loadSurface('temp.mat');
+            SurfStruct = SurfaceRoughnessProcessor.buildSurfStructFromMatrix(importdata(filename));
         end
-        
+
         function SurfStruct = importSurfaceExcel(filename)
-            A = readmatrix(filename);
+            SurfStruct = SurfaceRoughnessProcessor.buildSurfStructFromMatrix(readmatrix(filename));
+        end
+
+        function SurfStruct = buildSurfStructFromMatrix(A)
             L = size(A, 2);
             if L == 2
-                X = A(:, 1);
-                Z = A(:, 2);
-                save('temp.mat', 'X', 'Z')
+                SurfStruct.obj      = struct('X', A(:,1), 'Z', A(:,2));
+                SurfStruct.varProps = struct('name', {'X','Z'}, 'class', {'double','double'});
+                SurfStruct.varNames = {'X', 'Z'};
             elseif L == 3
                 A = sortrows(A, [1, 2]);
-                J = find(A(1, 1) - A(:, 1) == 0, 1, 'last');
+                J = find(A(1,1) - A(:,1) == 0, 1, 'last');
                 A = sortrows(A, [2, 1]);
-                I = find(A(1, 2) - A(:, 2) == 0, 1, 'last');
-                X = reshape(A(:, 1), I, J)';
-                Y = reshape(A(:, 2), I, J)';
-                Z = reshape(A(:, 3), I, J)';
-                save('temp.mat', 'X', 'Y', 'Z')
+                I = find(A(1,2) - A(:,2) == 0, 1, 'last');
+                X = reshape(A(:,1), I, J)';
+                Y = reshape(A(:,2), I, J)';
+                Z = reshape(A(:,3), I, J)';
+                SurfStruct.obj      = struct('X', X, 'Y', Y, 'Z', Z);
+                SurfStruct.varProps = struct('name', {'X','Y','Z'}, 'class', {'double','double','double'});
+                SurfStruct.varNames = {'X', 'Y', 'Z'};
+            else
+                error('Expected 2 or 3 columns, got %d', L)
             end
-            SurfStruct = SurfaceRoughnessProcessor.loadSurface('temp.mat');
         end
-        
+
         function SurfStruct = determineSurfaceType(SurfStruct)
             L = length(SurfStruct.varNames);
             if L == 2
@@ -86,7 +72,7 @@ classdef SurfaceRoughnessProcessor
             end
             SurfStruct.type = type;
         end
-        
+
         function SurfStruct = determineXandYdir(SurfStruct)
             zname = SurfStruct.varNames{end};
             z = SurfStruct.obj.(zname);
@@ -113,7 +99,7 @@ classdef SurfaceRoughnessProcessor
             SurfStruct.Xdir = Xdir;
             SurfStruct.Ydir = Ydir;
         end
-        
+
         function SurfStruct = roughPhysicalProp(SurfStruct)
             xname = SurfStruct.varNames{1};
             x = SurfStruct.obj.(xname);
@@ -130,7 +116,7 @@ classdef SurfaceRoughnessProcessor
             SurfStruct.Lx = Lx;
             SurfStruct.Ly = Ly;
         end
-        
+
         function SurfStruct = roughnessStats(SurfStruct)
             zname = SurfStruct.varNames{end};
             z = SurfStruct.obj.(zname);
@@ -152,19 +138,19 @@ classdef SurfaceRoughnessProcessor
             xname = SurfStruct.varNames{1};
             x = SurfStruct.obj.(xname);
             SurfStruct.ESx = SurfaceRoughnessProcessor.EffectiveSlope(x, z, SurfStruct.Xdir, SurfStruct.Lx);
-            SurfStruct.Rlx = SurfaceRoughnessProcessor.CorrelationLenght(x, z, SurfStruct.Xdir);
+            SurfStruct.Rlx = SurfaceRoughnessProcessor.CorrelationLength(x, z, SurfStruct.Xdir);
             switch SurfStruct.type
                 case '2D-surface'
                     yname = SurfStruct.varNames{2};
                     y = SurfStruct.obj.(yname);
                     SurfStruct.ESy = SurfaceRoughnessProcessor.EffectiveSlope(y, z, SurfStruct.Ydir, SurfStruct.Ly);
-                    SurfStruct.Rly = SurfaceRoughnessProcessor.CorrelationLenght(y, z, SurfStruct.Ydir);
+                    SurfStruct.Rly = SurfaceRoughnessProcessor.CorrelationLength(y, z, SurfStruct.Ydir);
                 otherwise
                     SurfStruct.ESy = [];
                     SurfStruct.Rly = [];
             end
         end
-        
+
         function Es = EffectiveSlope(X, Z, dir, L)
             if dir == 1
                 dx = X(2, 1) - X(1, 1);
@@ -176,8 +162,8 @@ classdef SurfaceRoughnessProcessor
             dzdx = diff(Z, 1, dir) ./ diff(X, 1, dir);
             Es = 1/L .* mean(trapz(abs(dzdx), dir) .* dx, mean_dir);
         end
-        
-        function Rlx = CorrelationLenght(X, Z, dir)
+
+        function Rlx = CorrelationLength(X, Z, dir)
             if dir == 1
                 dx = X(2, 1) - X(1, 1);
             else
@@ -189,7 +175,7 @@ classdef SurfaceRoughnessProcessor
             ind = SurfaceRoughnessProcessor.findSlopeCorr(Zcorr);
             Rlx = interp1(Zcorr(s:s+ind-1), lags(s:s+ind-1), 1./exp(1), 'linear');
         end
-        
+
         function [lags, C] = MeanAutoCorr_FFT(A, dir)
             S = size(A);
             s = S(dir);
@@ -209,22 +195,17 @@ classdef SurfaceRoughnessProcessor
             C = C ./ max(C(:));
             lags = [-linspace(s-1, 1, s-1) 0 linspace(1, s-1, s-1)];
         end
-        
+
         function ind = findSlopeCorr(C)
-            l = length(C);
-            C = C((l+1)/2:end);
-            ind = find(C-min(C) == 0, 1, 'first');
+            center = ceil(length(C) / 2);
+            C = C(center:end);
+            ind = find(C == min(C), 1, 'first');
         end
-        
+
         function S = cleanUpStruct(SurfStruct)
-            S = struct();
-            fields = fieldnames(SurfStruct);
-            for n = 4:length(fields)
-                f = fields{n};
-                S.(f) = SurfStruct.(f);
-            end
+            S = rmfield(SurfStruct, {'obj', 'varProps', 'varNames'});
         end
-        
+
         function SurfAnswers = RoughnessQuestionnaire(batch)
             switch batch
                 case true
@@ -234,27 +215,27 @@ classdef SurfaceRoughnessProcessor
                     q1 = 'Hom'; q2 = 'Het';
                     SurfAnswers.Q1 = questdlg(prompt, 'Roughness Information', q1, q2, q1);
                     SurfaceRoughnessProcessor.checkAnswer(SurfAnswers.Q1);
-                    
+
                     prompt = 'Is the roughness Regular or Irregular?';
                     q1 = 'Reg'; q2 = 'Irreg';
                     SurfAnswers.Q2 = questdlg(prompt, 'Roughness Information', q1, q2, q1);
                     SurfaceRoughnessProcessor.checkAnswer(SurfAnswers.Q2);
-                    
+
                     prompt = 'Are results for a ...';
                     q1 = 'TBL'; q2 = 'Pipe'; q3 = 'Channel';
                     SurfAnswers.Q3 = questdlg(prompt, 'Roughness Information', q1, q2, q3, q1);
                     SurfaceRoughnessProcessor.checkAnswer(SurfAnswers.Q3);
-                    
+
                     prompt = 'Are results from Experiments or Simulations?';
                     q1 = 'Exp'; q2 = 'Sim';
                     SurfAnswers.Q4 = questdlg(prompt, 'Roughness Information', q1, q2, q1);
                     SurfaceRoughnessProcessor.checkAnswer(SurfAnswers.Q4);
-                    
+
                     prompt = 'What is the general descriptor of this surface, .i.e. "Sandgrain"?';
                     SurfAnswers.Q5 = inputdlg(prompt, 'Roughness Information', [1 50]);
                     SurfAnswers.Q5 = SurfAnswers.Q5{1};
                     SurfaceRoughnessProcessor.checkAnswer(SurfAnswers.Q5);
-                    
+
                     prompt1 = 'What is the last name of the lead author of the study? ';
                     prompt2 = 'What year were the results published? ';
                     prompt3 = 'What is the identifying name of this surface, i.e. "220Grit"? ';
@@ -270,7 +251,7 @@ classdef SurfaceRoughnessProcessor
                     SurfaceRoughnessProcessor.checkAnswer(SurfAnswers.Q9)
             end
         end
-        
+
         function ScannerAnswers = ScannerQuestionnaire(SurfAnswers, batch)
             if strcmp(SurfAnswers.Q4, 'Exp')
                 switch batch
@@ -292,14 +273,13 @@ classdef SurfaceRoughnessProcessor
                 ScannerAnswers.Q3 = 'N/A';
             end
         end
-        
+
         function SurfAnswers = loadQuestionnaire(file)
             fid = fopen(file, 'r');
             n = 1;
             while ~feof(fid)
                 line = strtrim(fgetl(fid));
-                if isempty(line) || all(isspace(line)) || strncmp(line, '#', 1)
-                else
+                if ~isempty(line) && ~strncmp(line, '#', 1)
                     Q = ['Q' num2str(n)];
                     SurfAnswers.(Q) = line;
                     n = n + 1;
@@ -307,7 +287,7 @@ classdef SurfaceRoughnessProcessor
             end
             fclose(fid);
         end
-        
+
         function checkAnswer(S)
             if iscell(S) && ~isempty(S)
                 for n = 1:length(S)
@@ -321,13 +301,12 @@ classdef SurfaceRoughnessProcessor
                 end
             end
         end
-        
+
         function exportSurfaceStatistics(SurfStruct, SurfAnswers, ScannerAnswers)
             S = SurfaceRoughnessProcessor.cleanUpStruct(SurfStruct);
-            Results = struct2cell(S);
-            Fields = fieldnames(S);
-            Results = Results(4:end);
-            Fields = Fields(4:end);
+            Sstat = rmfield(S, {'type', 'Xdir', 'Ydir'});
+            Results = struct2cell(Sstat);
+            Fields = fieldnames(Sstat);
             [dirName, fileName] = SurfaceRoughnessProcessor.SurfAnswers2filename(SurfAnswers);
             ScannerName = {'Scanner name and model'; 'Scanner uncertainty (microns)';
                            'Unit of scan file/statistics'};
@@ -359,44 +338,44 @@ classdef SurfaceRoughnessProcessor
             SurfaceRoughnessProcessor.exportSurfStats2mat(fullfile(dirName, fileName), S, SurfaceName, SurfAnswers, ScannerName, ScannerAnswers);
             SurfaceRoughnessProcessor.exportSurfaceData2mat(dirName, fileName, SurfStruct);
         end
-        
+
         function writeExcelResults(C, C2, C3, pathname, filename)
             pathfile = fullfile(pathname, filename);
             if isfile(pathfile)
                 Nf = dir([pathfile(1:end-5) '*.' pathfile(end-3:end)]);
-                N = length(Nf);
-                N = N + 1;
+                N = length(Nf) + 1;
                 filename = [filename(1:end-5) '(' num2str(N) ').' filename(end-3:end)];
             end
             SurfaceRoughnessProcessor.writeResults(C, pathname, filename);
             SurfaceRoughnessProcessor.writeResults(C2, pathname, filename, 'E1:F3')
             SurfaceRoughnessProcessor.writeResults(C3, pathname, filename, 'E5:F13', true)
         end
-        
+
         function writeResults(C, pathname, filename, Range, flag_rename)
             if ~exist('flag_rename', 'var')
                 flag_rename = false;
             end
             if ~ispc
-                filename = fullfile(pathname, filename);
+                outFile = fullfile(pathname, filename);
                 if exist('Range', 'var')
-                    writecell(C, filename, 'Range', Range);
+                    writecell(C, outFile, 'Range', Range);
                 else
-                    writecell(C, filename);
+                    writecell(C, outFile);
                 end
             else
-                cd(pathname)
+                tmpFile = fullfile(pathname, 'temp.xlsx');
+                destFile = fullfile(pathname, filename);
                 if exist('Range', 'var')
-                    xlswrite('temp.xlsx', C, 'Sheet1', Range);
+                    xlswrite(tmpFile, C, 'Sheet1', Range);
                 else
-                    xlswrite('temp.xlsx', C, 'Sheet1', 'A1');
+                    xlswrite(tmpFile, C, 'Sheet1', 'A1');
                 end
-                if flag_rename == true
-                    movefile('temp.xlsx', filename)
+                if flag_rename
+                    movefile(tmpFile, destFile)
                 end
             end
         end
-        
+
         function [dirName, fileName] = SurfAnswers2filename(SurfAnswers)
             pattern = [SurfAnswers.Q1 '_'...
                        SurfAnswers.Q2 '_'...
@@ -410,9 +389,9 @@ classdef SurfaceRoughnessProcessor
             if ~isfolder(dirName)
                 mkdir(dirName)
                 for n = 1:length(folders)
-                    dir = fullfile(dirName, folders{n});
-                    if ~isfolder(dir)
-                        mkdir(dir)
+                    subDir = fullfile(dirName, folders{n});
+                    if ~isfolder(subDir)
+                        mkdir(subDir)
                     end
                 end
             end
@@ -423,19 +402,19 @@ classdef SurfaceRoughnessProcessor
                         SurfAnswers.Q8...
                         '.xlsx'];
         end
-        
+
         function exportSurfStats2mat(filename, SurfStruct, SurfaceName, SurfAnswers, ScannerName, ScannerAnswers)
             fields = fieldnames(SurfAnswers);
             for n = 1:length(SurfaceName)
                 f = fields{n};
-                var = genvarname(SurfaceName{n});
+                var = matlab.lang.makeValidName(SurfaceName{n});
                 Surface.(var) = SurfAnswers.(f);
             end
-            if strcmp(SurfAnswers.Q4, 'Experiments')
+            if strcmp(SurfAnswers.Q4, 'Exp')
                 fields = fieldnames(ScannerAnswers);
                 for n = 1:length(ScannerName)
                     f = fields{n};
-                    var = genvarname(ScannerName{n});
+                    var = matlab.lang.makeValidName(ScannerName{n});
                     Surface.(var) = ScannerAnswers.(f);
                 end
             end
@@ -448,17 +427,15 @@ classdef SurfaceRoughnessProcessor
             filename = [filename(1:end-5) ext];
             if isfile(filename)
                 Nf = dir([filename(1:end-4) '*' ext]);
-                N = length(Nf);
-                N = N + 1;
+                N = length(Nf) + 1;
                 filename = [filename(1:end-4) '(' num2str(N) ')' ext];
             end
             save(filename, 'Surface')
         end
-        
+
         function exportSurfaceData2mat(pathname, filename, SurfStruct)
             varNames = SurfStruct.varNames;
-            N = length(varNames);
-            for n = 1:N
+            for n = 1:length(varNames)
                 var = varNames{n};
                 SurfaceData.(var) = SurfStruct.obj.(var);
             end
@@ -469,20 +446,18 @@ classdef SurfaceRoughnessProcessor
             filename = fullfile(pathname, filename);
             if isfile(filename)
                 Nf = dir([filename(1:end-4) '*' ext]);
-                N = length(Nf);
-                N = N + 1;
+                N = length(Nf) + 1;
                 filename = [filename(1:end-4) '(' num2str(N) ')' ext];
             end
             save(filename, 'SurfaceData')
         end
-        
+
         function visualizeResults(SurfStruct)
             type = SurfStruct.type;
             figure(1);
             vars = SurfStruct.varNames;
             switch type
                 case '1D-profile'
-                    vars = SurfStruct.varNames;
                     X = SurfStruct.obj.(vars{1});
                     Z = SurfStruct.obj.(vars{2});
                     p = plot(X, Z);
@@ -501,7 +476,7 @@ classdef SurfaceRoughnessProcessor
                     c.Label.String = 'z [mm]';
             end
         end
-        
+
         function displayResults(SurfStruct)
             S = SurfaceRoughnessProcessor.cleanUpStruct(SurfStruct);
             DataSet = struct2table(S, 'AsArray', true);
